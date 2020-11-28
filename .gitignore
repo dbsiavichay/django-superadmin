@@ -1,0 +1,9 @@
+.vscode
+*.pyc
+*~
+*.sqlite3
+*.lock
+.DS_Store
+.env
+build/
+*egg-info/
