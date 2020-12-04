@@ -40,6 +40,12 @@ class ListMixin:
             })
     
         return context
+    
+    def get_paginate_by(self, queryset):
+        paginate_by = self.request.GET.get("paginate_by")
+        if paginate_by:
+            return paginate_by
+        return super().get_paginate_by(queryset)
 
     def get_headers(self):
         headers = [get_label_of_field(self.model, name) for name in self.site.list_fields]
