@@ -42,24 +42,23 @@ class ListMixin:
         return context
 
     def get_headers(self):
-        for name in self.site.list_fields:
-            yield get_label_of_field(self.model, name)
+        headers = [get_label_of_field(self.model, name) for name in self.site.list_fields]
+        return headers
 
     def get_rows(self, queryset):
-        for instance in queryset:
-            urls = get_urls_of_site(self.site, instance)
-            row = {
+        rows = [
+            {
                 "instance": instance,
                 "values": self.get_values(instance),
-                "urls": urls,
+                "urls": get_urls_of_site(self.site, instance),
             }
-
-            yield row
+            for instance in queryset    
+        ]
+        return rows
 
     def get_values(self, instance):
-        for name in self.site.list_fields:
-            value = get_attr_of_object(instance, name)
-            yield value
+        values = [get_attr_of_object(instance, name) for name in self.site.list_fields]
+        return values
 
 class ListView(View):
     site = None
