@@ -31,7 +31,7 @@ def get_urls_of_site(site, object=None):
     urls = {}
     kwargs = get_slug_or_pk(object)
 
-    for action in ("list", "create"):
+    for action in ("list", "create", "mass_update", "mass_delete"):
         try:
             url_name = site.get_url_name(action)
             urls.update({action: reverse(url_name)})
@@ -41,7 +41,7 @@ def get_urls_of_site(site, object=None):
     if not kwargs:
         return urls
 
-    for action in ("update", "detail", "delete", "duplicate"):
+    for action in ("update","detail", "delete", "duplicate"):
         try:
             url_name = site.get_url_name(action)
 

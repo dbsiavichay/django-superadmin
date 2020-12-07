@@ -1,11 +1,10 @@
 """ """
 # Django
-from django.views.generic import View
 from django.views.generic import CreateView as BaseCreateView
 from django.forms.models import model_to_dict
 
 # Local
-from .base import get_base_view
+from .base import SiteView, get_base_view
 from ..shortcuts import get_object, get_urls_of_site
 from ..utils import import_all_mixins
 
@@ -56,9 +55,7 @@ class CreateMixin:
         urls = get_urls_of_site(self.site, self.object)
         return urls.get(self.site.create_success_url)
 
-class CreateView(View):
-    site = None
-
+class CreateView(SiteView):
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
         # Class
@@ -73,5 +70,3 @@ class CreateView(View):
         view = View.as_view()
         return view(request, *args, **kwargs)
 
-    def dispatch(self, request, *args, **kwargs):
-        return self.view(request, *args, **kwargs)

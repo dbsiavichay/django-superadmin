@@ -2,9 +2,10 @@
 # Django
 from django.views.generic import View
 from django.views.generic import UpdateView as BaseUpdateView
+from django.http import HttpResponseForbidden, JsonResponse
 
 # Local
-from .base import get_base_view
+from .base import SiteView, get_base_view
 from ..shortcuts import get_urls_of_site
 from ..utils import import_all_mixins
 
@@ -19,14 +20,12 @@ class UpdateMixin:
         return urls.get(self.site.update_success_url)
 
 
-class UpdateView(View):
-    site = None
-
+class UpdateView(SiteView):
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
         # Class
         mixins = import_all_mixins() + [UpdateMixin]
-        View = get_base_view(BaseUpdateView, mixins, self.site)
+        View = get_base_view(BaseUpdateView, mixins, self.get_site())
 
         # Set attribures
         View.form_class = self.site.form_class
@@ -37,5 +36,28 @@ class UpdateView(View):
         view = View.as_view()
         return view(request, *args, **kwargs)
 
-    def dispatch(self, request, *args, **kwargs):
-        return self.view(request, *args, **kwargs)
+
+
+class MassUpdateView(View):
+    site = None
+    http_method_names = ['post',]
+
+    def post(self, request, *args, **kwargs):
+        model = self.site.model
+        ids = request.POST.getlist('ids')
+        field = request.POST.get('field')
+        value = request.POST.get('value')
+
+        if not self.request.user.has_perm(f"{model._meta.app_label}.update_{model._meta.model_name}"):
+            return HttpResponseForbidden()
+
+        if not hasattr(model, field):
+            return JsonResponse({'error': 'El campo indicado no existe.'}, status=400)
+            
+        objects = model.objects.filter(id__in=ids)
+        objects.update(**{field: value})
+
+        return JsonResponse({'success': f'{len(objects)} objectos actualizados.'}, status=200)
+
+
+

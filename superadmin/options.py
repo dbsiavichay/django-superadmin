@@ -5,7 +5,10 @@ from django.urls import path
 
 # Views
 from .views import (
-    ListView, CreateView, UpdateView, DetailView, DeleteView,
+    ListView, CreateView, 
+    UpdateView, MassUpdateView,
+    DetailView, 
+    DeleteView, MassDeleteView,
     DuplicateView,
 )
 
@@ -58,11 +61,17 @@ class ModelSite:
     url_delete_suffix = "delete"
     url_duplicate_suffix = "duplicate"
 
+    url_mass_update_suffix = "mass_update"
+    url_mass_delete_suffix = "mass_delete"
+
    
     def __init__(self, model, **kwargs):
         self.model = model
         if not self.model:
             raise ImproperlyConfigured("The 'model' attribute must be specified.")
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
         if not isinstance(self.allow_views, tuple):
             raise ImproperlyConfigured("The 'allow_views' attribute must be a tuple.")
@@ -76,7 +85,6 @@ class ModelSite:
         self.breadcrumb_detail_text = getattr(self, "breadcrumb_detail_text", settings.BREADCRUMB_DETAIL_TEXT)
         self.breadcrumb_delete_text = getattr(self, "breadcrumb_delete_text", settings.BREADCRUMB_DELETE_TEXT)
 
-  
     def get_info(self):
         """Obtiene la información del modelo"""
         #info = cls.model._meta.app_label, cls.model._meta.model_name
@@ -138,6 +146,11 @@ class ModelSite:
                     view = UpdateView.as_view(site=self), 
                     name = url_update_name
                 ),
+                path(
+                    route = f"{self.url_update_suffix}/", 
+                    view = MassUpdateView.as_view(site=self), 
+                    name = self.get_base_url_name("mass_update")
+                ),
             ]
         
         if "detail" in self.allow_views:
@@ -159,6 +172,11 @@ class ModelSite:
                     route = f"{route_param}/{self.url_delete_suffix}/",
                     view = DeleteView.as_view(site=self),
                     name = url_delete_name,
+                ),
+                path(
+                    route = f"{self.url_delete_suffix}/", 
+                    view = MassDeleteView.as_view(site=self), 
+                    name = self.get_base_url_name("mass_delete")
                 ),
             ]
 

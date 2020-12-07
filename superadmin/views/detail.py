@@ -1,11 +1,10 @@
 """ """
 # Django
-from django.views.generic import View
 from django.views.generic import DetailView as BaseDetailView
 from django.contrib.admin.utils import flatten
 
 # Local
-from .base import get_base_view
+from .base import SiteView, get_base_view
 from ..shortcuts import get_urls_of_site
 from ..utils import (
     get_label_of_field,
@@ -62,8 +61,7 @@ class DetailMixin:
         return flatten_results, fieldset_results
 
 
-class DetailView(View):
-    site = None
+class DetailView(SiteView):
 
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
@@ -76,6 +74,3 @@ class DetailView(View):
 
         view = View.as_view()
         return view(request, *args, **kwargs)
-
-    def dispatch(self, request, *args, **kwargs):
-        return self.view(request, *args, **kwargs)

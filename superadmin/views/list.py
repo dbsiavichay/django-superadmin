@@ -1,11 +1,10 @@
 """ List view engine"""
 # Django
-from django.views.generic import View
 from django.views.generic import ListView as BaseListView
 
 
 # Local
-from .base import get_base_view
+from .base import SiteView, get_base_view
 from ..shortcuts import get_urls_of_site
 from ..utils import import_all_mixins
 
@@ -25,7 +24,7 @@ class ListMixin:
         context = super().get_context_data(**kwargs)
 
         opts = {
-            "headers": self.get_headers(),
+            "fields": self.get_list_fields(),
             "rows": self.get_rows(context["object_list"]),
             "page_start_index":context["page_obj"].start_index() if context["is_paginated"] else 1,
             "page_end_index":context["page_obj"].end_index() if context["is_paginated"] else context["object_list"].count(),
@@ -47,9 +46,13 @@ class ListMixin:
             return paginate_by
         return super().get_paginate_by(queryset)
 
-    def get_headers(self):
-        headers = [get_label_of_field(self.model, name) for name in self.site.list_fields]
-        return headers
+    def get_list_fields(self):
+        fields = [(name, get_label_of_field(self.model, name)) for name in self.site.list_fields]
+        return fields
+
+    def get_editable_fields(self):
+        fields = [(name, get_label_of_field(self.model, name)) for name in self.site.form_class._meta.fields]
+        return fields
 
     def get_rows(self, queryset):
         rows = [
@@ -66,14 +69,13 @@ class ListMixin:
         values = [get_attr_of_object(instance, name) for name in self.site.list_fields]
         return values
 
-class ListView(View):
-    site = None
 
+class ListView(SiteView):
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
         # Class
         mixins = import_all_mixins() + [ListMixin]
-        View = get_base_view(BaseListView, mixins, self.site)
+        View = get_base_view(BaseListView, mixins, self.get_site())
         
         # Set attriburtes
         View.queryset = self.site.queryset
@@ -83,6 +85,4 @@ class ListView(View):
 
         view = View.as_view()
         return view(request, *args, **kwargs)
-
-    def dispatch(self, request, *args, **kwargs):
-        return self.view(request, *args, **kwargs)
+        

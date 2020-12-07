@@ -1,5 +1,5 @@
 # Django
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, View
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings
 from django.contrib import messages
@@ -7,7 +7,14 @@ from django.contrib import messages
 # Utils
 from ..utils import get_user_menu
 
+class SiteView(View):
+    site = None
 
+    def dispatch(self, request, *args, **kwargs):
+        return self.view(request, *args, **kwargs)
+
+    def get_site(self):
+        return self.site
 
 class ModuleView(TemplateView):
     """Clase para definir las vistas de los módulos de aplicaciones"""
@@ -45,6 +52,8 @@ def get_base_view(ClassView, mixins, site):
             context = super().get_context_data(**kwargs)
             opts = {
                 "title": self.model._meta.verbose_name_plural,
+                "app_name": self.model._meta.app_label,
+                "model_name": self.model._meta.model_name,
             }
 
             if "site" in context:
@@ -64,22 +73,3 @@ def get_base_view(ClassView, mixins, site):
     View.site = site
     View.model = site.model
     return View
-
-"""
-def get_base_view(View, Mixin, site):
-    from hydra.mixins import (
-        PermissionRequiredMixin, BreadcrumbMixin, UrlMixin, TemplateMixin, FilterMixin
-    )
-
-    class View(PermissionRequiredMixin, BreadcrumbMixin, UrlMixin, TemplateMixin, FilterMixin, Mixin, View):
-        def form_valid(self, form):
-            messages.success(self.request, "Se ha guardado correctamente.")
-            return super().form_valid(form)
-
-        def get_success_url(self):
-            return get_urls_of_site(self.site).get(f"{self.site.success_url}")
-
-    View.site = site
-    View.model = site.model
-    return View
-"""
