@@ -22,14 +22,9 @@ class FormsetList:
         self.formsets = dict()
 
         for key, formset_class in formsets.items():
-            headers = [
-                get_label_of_field(formset_class.form.Meta.model, field_name)
-                for field_name in formset_class.form.Meta.fields
-            ]
             self.formsets.update({
                 key: {
                     "class": formset_class,
-                    "headers": headers
                 }
             })
 
@@ -57,8 +52,15 @@ class FormsetList:
                 kwargs['initial'] = []
             instance = formset_class(**kwargs)
             instance.extra += len(kwargs['initial'])
+
+            headers = [
+                get_label_of_field(formset_class.form.Meta.model, field.name)
+                for field in instance.empty_form.visible_fields()
+                if field.name in formset_class.form.Meta.fields
+            ]
             self.formsets.get(key).update({
                 "instance": instance,
+                "headers": headers,
             })
 
         instances = {
