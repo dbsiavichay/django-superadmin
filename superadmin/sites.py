@@ -8,7 +8,7 @@ from django.db import connection
 from django.urls import path, include 
 from django.apps import apps
 
-from .utils import import_mixins
+from .utils import import_mixin
 
 
 class Site:
@@ -73,11 +73,11 @@ class Site:
     def get_view_urls(self, menu):
         from django.contrib.auth.mixins import PermissionRequiredMixin
         urlpatterns = []
-        mixins = import_mixins("BreadcrumbMixin",)
+        mixin = import_mixin("BreadcrumbMixin")
         view = menu.action.get_view_class()
         view.menu = None
         if PermissionRequiredMixin not in view.__bases__:
-            view.__bases__ = (PermissionRequiredMixin, *mixins, *view.__bases__)
+            view.__bases__ = (PermissionRequiredMixin, mixin, *view.__bases__)
         
         view.permission_required = menu.action.get_permissions()
         if view:

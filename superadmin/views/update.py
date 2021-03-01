@@ -7,7 +7,7 @@ from django.http import HttpResponseForbidden, JsonResponse
 # Local
 from .base import SiteView, get_base_view
 from ..shortcuts import get_urls_of_site
-from ..utils import import_all_mixins
+from ..utils import import_all_mixins, import_mixin
 
 
 class UpdateMixin:
@@ -30,6 +30,12 @@ class UpdateView(SiteView):
         """ Crear la List View del modelo """
         # Class
         mixins = import_all_mixins() + [UpdateMixin]
+        if self.site.inlines and isinstance(self.site.inlines, dict):
+            FormsetMixin = import_mixin('FormsetMixin')
+            class InlineMixin(FormsetMixin):
+                formsets = self.site.inlines
+            mixins += [InlineMixin]
+
         View = get_base_view(BaseUpdateView, mixins, self.get_site())
 
         # Set attribures

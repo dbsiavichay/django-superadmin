@@ -91,20 +91,20 @@ def import_class(module_name, class_name):
     return cls
 
 
-def import_mixins(*args):
+def import_mixin(name):
+    mixin = import_class("superadmin.mixins", name)
+    return mixin
+
+
+def import_all_mixins():
     mixins = list()
-    for name in args:
-        mixin = import_class("superadmin.mixins", name)
+    names = "PermissionRequiredMixin", "BreadcrumbMixin", "UrlMixin", "TemplateMixin", "FilterMixin"
+    for name in names:
+        mixin = import_mixin(name)
         if mixin:
             mixins.append(mixin)
         
     return mixins
-
-def import_all_mixins():
-    names = "PermissionRequiredMixin", "BreadcrumbMixin", "UrlMixin", "TemplateMixin", "FilterMixin"
-    mixins = import_mixins(*names)
-    return mixins
-
 
 def get_user_menu(menu_list, user):
     menus = list()
