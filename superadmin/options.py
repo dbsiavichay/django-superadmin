@@ -30,6 +30,15 @@ class ModelSite:
     create_success_url = "list"
     update_success_url = "list"
     delete_success_url = "list"
+    
+    #Context
+    list_extra_context = {}
+    form_extra_context = {}
+    detail_extra_context = {}
+
+
+    #Inlines
+    inlines = {}
 
     # Templates
     list_template_name = None # Says superadmin which list template use

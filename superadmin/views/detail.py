@@ -19,6 +19,8 @@ class DetailMixin:
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context.update(self.site.detail_extra_context)
+
         flatten_results, fieldset_results = self.get_results()
         opts = {
             "results": fieldset_results,

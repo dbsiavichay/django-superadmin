@@ -16,6 +16,10 @@ class CreateMixin:
     action = "create"
     duplicate_param = "duplicate"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.site.form_extra_context)
+        return context
 
     def get_related_initial(self, object):
         related_initial = {}
