@@ -43,6 +43,7 @@ class DeleteView(SiteView):
         View = get_base_view(BaseDeleteView, mixins, self.site)
         
         # Set attributes
+        View.__bases__ = (*self.site.delete_mixins, *View.__bases__)
         view = View.as_view()
         return view(request, *args, **kwargs)
 
