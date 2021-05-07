@@ -124,7 +124,7 @@ class Menu(models.Model):
     is_active = models.BooleanField(default=True, verbose_name='activo?')
 
     class Meta:
-        ordering = ('route', 'sequence')
+        ordering = ('sequence',)
 
     def __str__(self):
         return f"{self.name} | {self.get_route()}" 

@@ -50,6 +50,7 @@ class ModelSite:
     list_mixins = () # List of mixins that superadmin include in ListViews
     form_mixins = () # List of mixins that superadmin include in Create and Update Views
     detail_mixins = () # List of mixins that superadmin include in DetailViews
+    delete_mixins = () # List of mixins that superadmin include in DetailViews
 
     # Prepopulate
     prepopulate_slug = ()

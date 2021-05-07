@@ -14,7 +14,7 @@ from django.apps import apps
 from .models import Action, Menu
 
 #
-from .management.commands.createactions import get_actions_and_elements
+from .management.commands.base import get_actions_and_elements
 
 
 class ModelFormMetaclass(DjangoModelFormMetaclass):
