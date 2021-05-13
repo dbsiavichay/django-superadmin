@@ -3,6 +3,9 @@ import inspect
 from importlib import import_module
 
 # Django
+from django.db.models import Q
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 from django.views.generic import View
 from django.apps import apps
 
@@ -20,9 +23,10 @@ def get_views_catalog():
             return []
 
         names = [
-            name for name, cand in inspect.getmembers(module, inspect.isclass)
+            name
+            for name, cand in inspect.getmembers(module, inspect.isclass)
             if issubclass(cand, View)
-        ] 
+        ]
         for name, mod in inspect.getmembers(module, inspect.ismodule):
             names.extend(map_module(f"{module_name}.{name}"))
 
@@ -48,19 +52,14 @@ def get_actions_and_elements(app_config, VIEWS_CATALOG):
     try:
         module = import_module(f"{app_config.name}.views")
         view_elements = {
-            name: (
-                f"{app_config.verbose_name.capitalize()} | {name}"
-            )
+            name: (f"{app_config.verbose_name.capitalize()} | {name}")
             for name, candidate in inspect.getmembers(module, inspect.isclass)
             if issubclass(candidate, View) and not candidate.__name__ in VIEWS_CATALOG
         }
     except (ModuleNotFoundError, ImportError):
         view_elements = {}
 
-    elements = {
-        **model_elements,
-        **view_elements
-    }
+    elements = {**model_elements, **view_elements}
 
     return actions, elements, model_elements, view_elements
 
@@ -102,33 +101,41 @@ def create_actions():
 def build_menu(data):
     create_actions()
     Menu.objects.all().delete()
-    default_action = Action.objects.get(
-        app_label="superadmin", element="ModuleView"
-    )
+    default_action = Action.objects.get(app_label="superadmin", element="ModuleView")
+
+    def permissions(data, action):
+        content_type = ContentType.objects.get_for_model(Permission)
+        for perm in data:
+            obj, created = Permission.objects.update_or_create(
+                codename=perm.get("codename"),
+                content_type=content_type,
+                defaults={"name": perm.get("name")},
+            )
+            action.permissions.add(obj)
 
     def build(name, data, action, parent=None, menu_list=[]):
         default = action
         is_group = True
         if "app" in data:
             element = data["model"] if "model" in data else data["view"]
-            default = Action.objects.get(
-                app_label=data["app"], element=element
-            )
+            default = Action.objects.get(app_label=data["app"], element=element)
             is_group = False
+            if "permissions" in data:
+                permissions(data["permissions"], default)
+
         current = Menu.objects.create(
             parent=parent,
             name=name.capitalize(),
             action=default,
             is_group=is_group,
-            sequence=len(menu_list) + 1
+            sequence=len(menu_list) + 1,
         )
         menu_list.append(current)
         if is_group:
             for key in data:
-                build(
-                    key, data[key], action, parent=current, menu_list=menu_list
-                )
+                build(key, data[key], action, parent=current, menu_list=menu_list)
         return menu_list
+
     menus = []
     for key in data:
         build(key, data[key], default_action, menu_list=menus)
