@@ -13,7 +13,6 @@ from collections.abc import Iterable
 from .. import settings
 
 
-
 from django.template import Context
 from django.template.base import (
     FILTER_SEPARATOR,
@@ -107,12 +106,13 @@ def append_attr(field, attr):
         attribute = params[0]
         value = params[1] if len(params) == 2 else ""
 
-        content = field.split('name')
+        content = field.split("name")
         content.insert(1, f'{attribute}="{value}" name')
-        field = ''.join(content)
+        field = "".join(content)
         return mark_safe(field)
 
-    if isinstance(field, str): return process_str(field, attr)
+    if isinstance(field, str):
+        return process_str(field, attr)
 
     def process(widget, attrs, attribute, value):
         if attrs.get(attribute):
@@ -121,7 +121,7 @@ def append_attr(field, attr):
             attrs[attribute] = widget.attrs[attribute] + " " + value
         else:
             attrs[attribute] = value
-    
+
     return _process_field_attributes(field, attr, process)
 
 
@@ -140,6 +140,7 @@ def add_class(field, css_class):
 @silence_without_field
 def set_data(field, data):
     return set_attr(field, "data-" + data)
+
 
 @register.filter(name="field_type")
 def field_type(field):
@@ -220,7 +221,7 @@ def render_field(parser, token):
         raise TemplateSyntaxError(error_msg)
 
     form_field = parser.compile_filter(form_field)
-    
+
     attrs = []
     for pair in attr_list:
         match = ATTRIBUTE_RE.match(pair)
@@ -251,7 +252,7 @@ class FieldNode(Node):
         """
 
         bounded_field = self.field.resolve(context)
-        #field = getattr(bounded_field, "field", None)
+        # field = getattr(bounded_field, "field", None)
         with context.push():
             for key, value in self.attrs:
                 if key == "class":
@@ -260,37 +261,40 @@ class FieldNode(Node):
                     bounded_field.field.widget.input_type = value.resolve(context)
                 else:
                     context.update({key: value.resolve(context)})
-            
+
             # Get template name
             if not bounded_field:
-                raise ImproperlyConfigured('The field passed do not exist.')
+                raise ImproperlyConfigured("The field passed do not exist.")
 
             widget_name = bounded_field.widget_type
             if not widget_name in settings.TEMPLATE_WIDGETS:
                 if not "default" in settings.TEMPLATE_WIDGETS:
-                    raise ImproperlyConfigured(f"Does not exist template name for '{widget_name}' or default widget template.")
+                    raise ImproperlyConfigured(
+                        f"Does not exist template name for '{widget_name}' or default widget template."
+                    )
                 template_name = settings.TEMPLATE_WIDGETS.get("default")
             else:
                 template_name = settings.TEMPLATE_WIDGETS.get(widget_name)
 
-            
-            context.update({
-                "field": bounded_field,
-            })
+            context.update(
+                {
+                    "field": bounded_field,
+                }
+            )
 
-            if widget_name in ("clearablefile",) and hasattr(bounded_field.form, "instance") and hasattr(bounded_field.form.instance, bounded_field.name):
+            if (
+                widget_name in ("clearablefile",)
+                and hasattr(bounded_field.form, "instance")
+                and hasattr(bounded_field.form.instance, bounded_field.name)
+            ):
                 file = getattr(bounded_field.form.instance, bounded_field.name)
                 if file:
-                    context.update({
-                        "file_name": file.name,
-                        "file_url": file.url
-                    })
-            
+                    context.update({"file_name": file.name, "file_url": file.url})
+
             t = context.template.engine.get_template(template_name)
             component = t.render(context)
             context.pop()
             return mark_safe(component)
-            
 
 
 """

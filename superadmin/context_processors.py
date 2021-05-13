@@ -1,13 +1,10 @@
-
 # Models
 from .models import Menu
 from .utils import get_user_menu
 
 
 def menu(request):
-    return {
-        "menu_tree": build_user_menu(request.user)
-    }
+    return {"menu_tree": build_user_menu(request.user)}
 
 
 def build_user_menu(user):

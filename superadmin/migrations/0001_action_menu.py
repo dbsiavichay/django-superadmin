@@ -9,42 +9,126 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('superadmin', 'unaccent_extension'),
+        ("superadmin", "unaccent_extension"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Action',
+            name="Action",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('to', models.PositiveSmallIntegerField(choices=[(1, 'Modelo'), (2, 'Vista')], verbose_name='acción hacia un')),
-                ('app_label', models.CharField(max_length=128, verbose_name='aplicación')),
-                ('name', models.CharField(max_length=128, verbose_name='nombre de la acción')),
-                ('element', models.CharField(max_length=128, verbose_name='elemento accionado')),
-                ('permissions', models.ManyToManyField(blank=True, to='auth.Permission', verbose_name='permisos específicos')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "to",
+                    models.PositiveSmallIntegerField(
+                        choices=[(1, "Modelo"), (2, "Vista")],
+                        verbose_name="acción hacia un",
+                    ),
+                ),
+                (
+                    "app_label",
+                    models.CharField(max_length=128, verbose_name="aplicación"),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        max_length=128, verbose_name="nombre de la acción"
+                    ),
+                ),
+                (
+                    "element",
+                    models.CharField(max_length=128, verbose_name="elemento accionado"),
+                ),
+                (
+                    "permissions",
+                    models.ManyToManyField(
+                        blank=True,
+                        to="auth.Permission",
+                        verbose_name="permisos específicos",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'acción',
-                'verbose_name_plural': 'acciones',
-                'ordering': ('name',),
-                'unique_together': {('app_label', 'element')},
+                "verbose_name": "acción",
+                "verbose_name_plural": "acciones",
+                "ordering": ("name",),
+                "unique_together": {("app_label", "element")},
             },
         ),
         migrations.CreateModel(
-            name='Menu',
+            name="Menu",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=128, verbose_name='nombre')),
-                ('route', models.CharField(editable=False, max_length=512, unique=True, verbose_name='ruta de acceso')),
-                ('icon_class', models.CharField(blank=True, max_length=128, null=True, verbose_name='clase css del ícono')),
-                ('is_group', models.BooleanField(default=False, editable=False, verbose_name='agrupa')),
-                ('sequence', models.PositiveSmallIntegerField(verbose_name='secuencia')),
-                ('is_active', models.BooleanField(default=True, verbose_name='activo?')),
-                ('action', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='superadmin.action', verbose_name='acción')),
-                ('parent', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='submenus', to='superadmin.menu', verbose_name='menú padre')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=128, verbose_name="nombre")),
+                (
+                    "route",
+                    models.CharField(
+                        editable=False,
+                        max_length=512,
+                        unique=True,
+                        verbose_name="ruta de acceso",
+                    ),
+                ),
+                (
+                    "icon_class",
+                    models.CharField(
+                        blank=True,
+                        max_length=128,
+                        null=True,
+                        verbose_name="clase css del ícono",
+                    ),
+                ),
+                (
+                    "is_group",
+                    models.BooleanField(
+                        default=False, editable=False, verbose_name="agrupa"
+                    ),
+                ),
+                (
+                    "sequence",
+                    models.PositiveSmallIntegerField(verbose_name="secuencia"),
+                ),
+                (
+                    "is_active",
+                    models.BooleanField(default=True, verbose_name="activo?"),
+                ),
+                (
+                    "action",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="superadmin.action",
+                        verbose_name="acción",
+                    ),
+                ),
+                (
+                    "parent",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="submenus",
+                        to="superadmin.menu",
+                        verbose_name="menú padre",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('route', 'sequence'),
+                "ordering": ("route", "sequence"),
             },
         ),
     ]

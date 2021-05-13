@@ -27,20 +27,24 @@ class ListMixin:
         opts = {
             "fields": self.get_list_fields(),
             "rows": self.get_rows(context["object_list"]),
-            "page_start_index":context["page_obj"].start_index() if context["is_paginated"] else 1,
-            "page_end_index":context["page_obj"].end_index() if context["is_paginated"] else context["object_list"].count(),
-            "total_records": context["paginator"].count if context["is_paginated"] else context["object_list"].count(),
+            "page_start_index": context["page_obj"].start_index()
+            if context["is_paginated"]
+            else 1,
+            "page_end_index": context["page_obj"].end_index()
+            if context["is_paginated"]
+            else context["object_list"].count(),
+            "total_records": context["paginator"].count
+            if context["is_paginated"]
+            else context["object_list"].count(),
         }
 
         if "site" in context:
             context["site"].update(opts)
         else:
-            context.update({
-                "site": opts
-            })
-    
+            context.update({"site": opts})
+
         return context
-    
+
     def get_paginate_by(self, queryset):
         paginate_by = self.request.GET.get("paginate_by")
         if paginate_by:
@@ -48,11 +52,17 @@ class ListMixin:
         return super().get_paginate_by(queryset)
 
     def get_list_fields(self):
-        fields = [(name, get_label_of_field(self.model, name)) for name in self.site.list_fields]
+        fields = [
+            (name, get_label_of_field(self.model, name))
+            for name in self.site.list_fields
+        ]
         return fields
 
     def get_editable_fields(self):
-        fields = [(name, get_label_of_field(self.model, name)) for name in self.site.form_class._meta.fields]
+        fields = [
+            (name, get_label_of_field(self.model, name))
+            for name in self.site.form_class._meta.fields
+        ]
         return fields
 
     def get_rows(self, queryset):
@@ -62,7 +72,7 @@ class ListMixin:
                 "values": self.get_values(instance),
                 "urls": get_urls_of_site(self.site, instance),
             }
-            for instance in queryset    
+            for instance in queryset
         ]
         return rows
 
@@ -77,7 +87,7 @@ class ListView(SiteView):
         # Class
         mixins = import_all_mixins() + [ListMixin]
         View = get_base_view(BaseListView, mixins, self.get_site())
-        
+
         # Set attriburtes
         View.queryset = self.site.queryset
         View.paginate_by = self.site.paginate_by
@@ -86,4 +96,3 @@ class ListView(SiteView):
 
         view = View.as_view()
         return view(request, *args, **kwargs)
-        

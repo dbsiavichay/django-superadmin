@@ -11,9 +11,7 @@ def get_slug_or_pk(object):
     res = dict()
     if object:
         param = "slug" if hasattr(object, "slug") else "pk"
-        res.update({
-            param:getattr(object, param)
-        })
+        res.update({param: getattr(object, param)})
 
     return res
 
@@ -37,11 +35,11 @@ def get_urls_of_site(site, object=None):
             urls.update({action: reverse(url_name)})
         except NoReverseMatch:
             print("Url not found: %s" % url_name)
-    
+
     if not kwargs:
         return urls
 
-    for action in ("update","detail", "delete", "duplicate"):
+    for action in ("update", "detail", "delete", "duplicate"):
         try:
             url_name = site.get_url_name(action)
 

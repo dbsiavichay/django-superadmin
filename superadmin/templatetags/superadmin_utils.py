@@ -15,7 +15,7 @@ def get_json(value):
 @register.filter("chunks")
 def chunks(value, number):
     number = int(number)
-    chunks = [ value[i:i + number] for i in range(0, len(value), number) ]
+    chunks = [value[i : i + number] for i in range(0, len(value), number)]
     return chunks
 
 

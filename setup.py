@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="django-superadmin", # Replace with your own username
+    name="django-superadmin",  # Replace with your own username
     version="1.0.5",
     author="Denis Siavichay",
     author_email="dbsiavichay@gmail.com",

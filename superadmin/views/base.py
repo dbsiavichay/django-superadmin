@@ -7,6 +7,7 @@ from django.contrib import messages
 # Utils
 from ..utils import get_user_menu
 
+
 class SiteView(View):
     site = None
 
@@ -16,8 +17,10 @@ class SiteView(View):
     def get_site(self):
         return self.site
 
+
 class ModuleView(TemplateView):
     """Clase para definir las vistas de los módulos de aplicaciones"""
+
     menu = None
 
     def get_context_data(self, **kwargs):
@@ -27,10 +30,8 @@ class ModuleView(TemplateView):
         if "site" in context:
             context["site"].update(opts)
         else:
-            context.update({
-                "site": opts
-            })
-            
+            context.update({"site": opts})
+
         data = {
             "object_list": get_user_menu(self.menu.submenus.all(), self.request.user)
         }
@@ -59,15 +60,12 @@ def get_base_view(ClassView, mixins, site):
             if "site" in context:
                 context["site"].update(opts)
             else:
-                context.update({
-                    "site": opts
-                })
+                context.update({"site": opts})
             return context
 
         def form_valid(self, form):
             messages.success(self.request, "Se ha guardado correctamente.")
             return super().form_valid(form)
-
 
     View.__bases__ = (*mixins, *View.__bases__)
     View.site = site

@@ -5,7 +5,7 @@ from django.utils.text import slugify
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models.base import ModelBase
 from django.db import connection
-from django.urls import path, include 
+from django.urls import path, include
 from django.apps import apps
 
 from .utils import import_mixin
@@ -29,9 +29,7 @@ class Site:
                     "The model_name passed must be contains app label and model name like 'app_label.model_name'"
                 )
         if not isinstance(model, ModelBase):
-            raise Exception(
-                "The model passed cannot be registered but not is a model."
-            )
+            raise Exception("The model passed cannot be registered but not is a model.")
 
         if model._meta.abstract:
             raise ImproperlyConfigured(
@@ -40,7 +38,7 @@ class Site:
             )
 
         if model in self._registry:
-            raise Exception('The model %s is already registered' % model.__name__)
+            raise Exception("The model %s is already registered" % model.__name__)
 
         self._registry[model] = site_class(model)
 
@@ -53,9 +51,9 @@ class Site:
     def get_modelsite(self, model):
         if not isinstance(model, ModelBase):
             raise Exception("The model passed is not a Model.")
-        
+
         if not self.is_registered(model):
-            raise Exception('The model %s is not registered' % model.__name__)
+            raise Exception("The model %s is not registered" % model.__name__)
 
         return self._registry[model]
 
@@ -64,21 +62,20 @@ class Site:
         model = menu.action.get_model_class()
         if model and model in self._registry:
             model_site = self._registry[model]
-            urlpatterns = [
-                path(f"{menu.route}/", include(model_site.urls))
-            ]
-       
+            urlpatterns = [path(f"{menu.route}/", include(model_site.urls))]
+
         return urlpatterns
 
     def get_view_urls(self, menu):
         from django.contrib.auth.mixins import PermissionRequiredMixin
+
         urlpatterns = []
         mixin = import_mixin("BreadcrumbMixin")
         view = menu.action.get_view_class()
         view.menu = None
         if PermissionRequiredMixin not in view.__bases__:
             view.__bases__ = (PermissionRequiredMixin, mixin, *view.__bases__)
-        
+
         view.permission_required = menu.action.get_permissions()
         if view:
             urlpatterns = [
@@ -88,7 +85,7 @@ class Site:
                     name=slugify(menu.name),
                 )
             ]
-       
+
         return urlpatterns
 
     def get_menu_urls(self, menu):
@@ -136,7 +133,7 @@ class Site:
     @property
     def urls(self):
         """Permite registrar las URLs en el archivo de urls del proyecto"""
-        return self.get_urls(), 'site', self.name
+        return self.get_urls(), "site", self.name
 
 
 site = Site()

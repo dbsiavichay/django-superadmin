@@ -2,7 +2,7 @@
 
 # Django
 from django.contrib.auth.mixins import (
-    PermissionRequiredMixin as DjangoPermissionRequiredMixin
+    PermissionRequiredMixin as DjangoPermissionRequiredMixin,
 )
 
 

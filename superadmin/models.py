@@ -20,22 +20,13 @@ class Action(models.Model):
         CLASSVIEW = 2, "Vista"
 
     to = models.PositiveSmallIntegerField(
-        choices=ToChoices.choices,
-        verbose_name="acción hacia un"
+        choices=ToChoices.choices, verbose_name="acción hacia un"
     )
-    app_label = models.CharField(
-        max_length=128,
-        verbose_name="aplicación"
-    )
-    name = models.CharField(max_length=128, verbose_name='nombre de la acción') 
-    element = models.CharField(
-        max_length=128,
-        verbose_name='elemento accionado'
-    )
+    app_label = models.CharField(max_length=128, verbose_name="aplicación")
+    name = models.CharField(max_length=128, verbose_name="nombre de la acción")
+    element = models.CharField(max_length=128, verbose_name="elemento accionado")
     permissions = models.ManyToManyField(
-        Permission,
-        blank=True,
-        verbose_name="permisos específicos"
+        Permission, blank=True, verbose_name="permisos específicos"
     )
 
     def __str__(self):
@@ -77,60 +68,52 @@ class Action(models.Model):
 
         if self.to == self.ToChoices.MODEL:
             basic_perms = any(
-                user.has_perm(f"{self.app_label}.{perm}_{self.element}") 
+                user.has_perm(f"{self.app_label}.{perm}_{self.element}")
                 for perm in ("view", "add", "change", "delete")
             )
         else:
             basic_perms = True
 
-        specific_perms = all(
-            user.has_perm(perm) for perm in self.get_permissions()
-        )
+        specific_perms = all(user.has_perm(perm) for perm in self.get_permissions())
 
         return basic_perms and specific_perms
 
-    
+
 class Menu(models.Model):
     """ Models for menu """
 
     parent = models.ForeignKey(
-        'self',
-        blank=True, null=True,
-        related_name='submenus',
+        "self",
+        blank=True,
+        null=True,
+        related_name="submenus",
         on_delete=models.CASCADE,
-        verbose_name='menú padre'
+        verbose_name="menú padre",
     )
-    name = models.CharField(max_length=128, verbose_name='nombre')
+    name = models.CharField(max_length=128, verbose_name="nombre")
     route = models.CharField(
-        max_length=512,
-        unique=True, editable=False,
-        verbose_name='ruta de acceso'
+        max_length=512, unique=True, editable=False, verbose_name="ruta de acceso"
     )
-    action = models.ForeignKey(
-        Action,
-        on_delete=models.CASCADE,
-        verbose_name='acción'
-    )
+    action = models.ForeignKey(Action, on_delete=models.CASCADE, verbose_name="acción")
     icon_class = models.CharField(
-        max_length=128,
-        blank=True, null=True, 
-        verbose_name='clase css del ícono'
+        max_length=128, blank=True, null=True, verbose_name="clase css del ícono"
     )
-    is_group = models.BooleanField(
-        default=False, editable=False,
-        verbose_name="agrupa"
-    )
-    sequence = models.PositiveSmallIntegerField(verbose_name='secuencia')
-    is_active = models.BooleanField(default=True, verbose_name='activo?')
+    is_group = models.BooleanField(default=False, editable=False, verbose_name="agrupa")
+    sequence = models.PositiveSmallIntegerField(verbose_name="secuencia")
+    is_active = models.BooleanField(default=True, verbose_name="activo?")
 
     class Meta:
-        ordering = ('sequence',)
+        ordering = ("sequence",)
 
     def __str__(self):
-        return f"{self.name} | {self.get_route()}" 
+        return f"{self.name} | {self.get_route()}"
 
     def get_route(self):
-        route = f"{self.parent.get_route()}/{slugify(self.name)}" if self.parent else slugify(self.name)
+        route = (
+            f"{self.parent.get_route()}/{slugify(self.name)}"
+            if self.parent
+            else slugify(self.name)
+        )
         return route
 
     def get_url(self):

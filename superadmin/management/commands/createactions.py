@@ -6,10 +6,8 @@ from .base import create_actions
 
 
 class Command(BaseCommand):
-    help = 'Create actions mapping all apps'
+    help = "Create actions mapping all apps"
 
     def handle(self, *args, **options):
         create_actions()
-        self.stdout.write(
-            self.style.SUCCESS("Successfully actions was created")
-        )
+        self.stdout.write(self.style.SUCCESS("Successfully actions was created"))

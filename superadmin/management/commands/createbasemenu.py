@@ -10,14 +10,16 @@ from superadmin import site
 
 
 class Command(BaseCommand):
-    help = 'Create base menu mapping all apps'
+    help = "Create base menu mapping all apps"
 
     def handle(self, *args, **options):
         call_command("createactions")
-        
+
         Menu.objects.all().delete()
 
-        default_action = Action.objects.get(app_label="superadmin", element="ModuleView")
+        default_action = Action.objects.get(
+            app_label="superadmin", element="ModuleView"
+        )
 
         apps = {}
         for model in site._registry:
@@ -32,26 +34,24 @@ class Command(BaseCommand):
                 name=app.verbose_name.capitalize(),
                 action=default_action,
                 is_group=True,
-                sequence=sequence
+                sequence=sequence,
             )
             sequence += 1
 
             index = 1
             for model in apps[app]:
-                action = Action.objects.get(app_label=app.label, element=model._meta.model_name)
+                action = Action.objects.get(
+                    app_label=app.label, element=model._meta.model_name
+                )
 
                 Menu.objects.create(
                     parent=menu,
                     name=model._meta.verbose_name_plural.capitalize(),
                     action=action,
                     is_group=False,
-                    sequence=index
+                    sequence=index,
                 )
 
                 index += 1
 
-
         self.stdout.write(self.style.SUCCESS("Successfully base menu was created"))
-
-
-    

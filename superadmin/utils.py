@@ -1,4 +1,4 @@
-#Python
+# Python
 import inspect
 from importlib import import_module
 
@@ -65,14 +65,21 @@ def get_attr_of_object(instance, field):
         pass
 
     attr = getattr(instance, name)
-    
-    if hasattr(attr, '__class__') and (attr.__class__.__name__ == 'ManyRelatedManager' or attr.__class__.__name__ == 'RelatedManager'):
+
+    if hasattr(attr, "__class__") and (
+        attr.__class__.__name__ == "ManyRelatedManager"
+        or attr.__class__.__name__ == "RelatedManager"
+    ):
         attr = [str(obj) for obj in attr.all()]
 
     attr = attr() if callable(attr) else attr
 
     if isinstance(attr, bool):
-        attr = format_html(settings.BOOLEAN_YES) if attr else format_html(settings.BOOLEAN_NO)
+        attr = (
+            format_html(settings.BOOLEAN_YES)
+            if attr
+            else format_html(settings.BOOLEAN_NO)
+        )
 
     return attr
 
@@ -98,13 +105,20 @@ def import_mixin(name):
 
 def import_all_mixins():
     mixins = list()
-    names = "PermissionRequiredMixin", "BreadcrumbMixin", "UrlMixin", "TemplateMixin", "FilterMixin"
+    names = (
+        "PermissionRequiredMixin",
+        "BreadcrumbMixin",
+        "UrlMixin",
+        "TemplateMixin",
+        "FilterMixin",
+    )
     for name in names:
         mixin = import_mixin(name)
         if mixin:
             mixins.append(mixin)
-        
+
     return mixins
+
 
 def get_user_menu(menu_list, user):
     menus = list()
@@ -115,13 +129,14 @@ def get_user_menu(menu_list, user):
             "icon": menu.icon_class or "",
             "submenus": get_user_menu(menu.submenus.all(), user),
             "is_root": not menu.parent,
-            "is_group": menu.is_group
+            "is_group": menu.is_group,
         }
 
-        if not obj_menu["submenus"] and (menu.is_group or not menu.action.has_permissions(user)):
+        if not obj_menu["submenus"] and (
+            menu.is_group or not menu.action.has_permissions(user)
+        ):
             continue
 
         menus.append(obj_menu)
 
     return menus
-

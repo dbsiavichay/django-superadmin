@@ -41,15 +41,14 @@ class ModelForm(BaseModelForm, metaclass=ModelFormMetaclass):
         sets = list()
         for fieldset in self._meta.fieldsets:
             if isinstance(fieldset, tuple):
-                sets.append({
-                    'bs_cols': int(12 / len(fieldset)),
-                    'fields': [self[field] for field in fieldset]
-                })
+                sets.append(
+                    {
+                        "bs_cols": int(12 / len(fieldset)),
+                        "fields": [self[field] for field in fieldset],
+                    }
+                )
             else:
-                sets.append({
-                    'bs_cols': 12,
-                    'fields': [self[fieldset]]
-                })
+                sets.append({"bs_cols": 12, "fields": [self[fieldset]]})
         return sets
 
     def has_fieldsets(self):
@@ -57,12 +56,8 @@ class ModelForm(BaseModelForm, metaclass=ModelFormMetaclass):
 
 
 class BaseActionForm(ModelForm):
-    app_label = ChoiceField(
-        label="Nombre de la aplicacióp"
-    )
-    element = ChoiceField(
-        label="Elemento"
-    )
+    app_label = ChoiceField(label="Nombre de la aplicacióp")
+    element = ChoiceField(label="Elemento")
 
     class Meta:
         model = Action
@@ -72,8 +67,15 @@ class BaseActionForm(ModelForm):
         super().__init__(*args, **kwargs)
 
         ct = ContentType.objects.get_for_model(Permission)
-        codenames = ("add_permission","change_permission","delete_permission","view_permission")
-        queryset = Permission.objects.filter(content_type=ct).exclude(codename__in=codenames)
+        codenames = (
+            "add_permission",
+            "change_permission",
+            "delete_permission",
+            "view_permission",
+        )
+        queryset = Permission.objects.filter(content_type=ct).exclude(
+            codename__in=codenames
+        )
         self.fields["permissions"].queryset = queryset
 
         APP_CHOICES = (
@@ -82,7 +84,7 @@ class BaseActionForm(ModelForm):
 
         ELEMENT_CHOICES = [
             (element, name)
-            for app in apps.get_app_configs() 
+            for app in apps.get_app_configs()
             for element, name in get_actions_and_elements(app)[1].items()
         ]
 

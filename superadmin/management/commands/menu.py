@@ -1,4 +1,3 @@
-
 import yaml
 
 # Django
@@ -9,13 +8,13 @@ from .base import build_menu
 
 
 class Command(BaseCommand):
-    help = 'Create base menu mapping all apps'
+    help = "Create base menu mapping all apps"
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--build',
-            action='store_true',
-            help='Build menu',
+            "--build",
+            action="store_true",
+            help="Build menu",
         )
 
     def handle(self, *args, **options):
@@ -28,12 +27,10 @@ class Command(BaseCommand):
                 apps[model._meta.app_config] = [model]
         """
         try:
-            with open('menu.yaml') as f:
+            with open("menu.yaml") as f:
                 data = yaml.load(f, Loader=yaml.FullLoader)
         except FileNotFoundError:
-            raise CommandError(
-                "Must be a menu.yaml file in the root of the project"
-            )
+            raise CommandError("Must be a menu.yaml file in the root of the project")
         except yaml.parser.ParserError as e:
             raise CommandError(
                 f"""An error has occurred {e.context}:

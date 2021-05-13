@@ -14,7 +14,7 @@ class UpdateMixin:
     """Update View del modelo"""
 
     action = "update"
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(self.site.form_extra_context)
@@ -31,9 +31,11 @@ class UpdateView(SiteView):
         # Class
         mixins = import_all_mixins() + [UpdateMixin]
         if self.site.inlines and isinstance(self.site.inlines, dict):
-            FormsetMixin = import_mixin('FormsetMixin')
+            FormsetMixin = import_mixin("FormsetMixin")
+
             class InlineMixin(FormsetMixin):
                 formsets = self.site.inlines
+
             mixins += [InlineMixin]
 
         View = get_base_view(BaseUpdateView, mixins, self.get_site())
@@ -48,27 +50,29 @@ class UpdateView(SiteView):
         return view(request, *args, **kwargs)
 
 
-
 class MassUpdateView(View):
     site = None
-    http_method_names = ['post',]
+    http_method_names = [
+        "post",
+    ]
 
     def post(self, request, *args, **kwargs):
         model = self.site.model
-        ids = request.POST.getlist('ids')
-        field = request.POST.get('field')
-        value = request.POST.get('value')
+        ids = request.POST.getlist("ids")
+        field = request.POST.get("field")
+        value = request.POST.get("value")
 
-        if not self.request.user.has_perm(f"{model._meta.app_label}.update_{model._meta.model_name}"):
+        if not self.request.user.has_perm(
+            f"{model._meta.app_label}.update_{model._meta.model_name}"
+        ):
             return HttpResponseForbidden()
 
         if not hasattr(model, field):
-            return JsonResponse({'error': 'El campo indicado no existe.'}, status=400)
-            
+            return JsonResponse({"error": "El campo indicado no existe."}, status=400)
+
         objects = model.objects.filter(id__in=ids)
         objects.update(**{field: value})
 
-        return JsonResponse({'success': f'{len(objects)} objectos actualizados.'}, status=200)
-
-
-
+        return JsonResponse(
+            {"success": f"{len(objects)} objectos actualizados."}, status=200
+        )

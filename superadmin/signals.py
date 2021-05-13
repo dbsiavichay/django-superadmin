@@ -15,9 +15,8 @@ from .utils import get_attr_of_object
 from . import site
 
 
-
-
 """ Signal for presave instance """
+
 
 @receiver(pre_save)
 def prepopulate_slug(sender, instance, **kwargs):
@@ -40,16 +39,19 @@ def prepopulate_slug(sender, instance, **kwargs):
 
     for field in slug_fields:
         if not hasattr(sender, field):
-            raise ImproperlyConfigured(f"Model '{model_name}' has no field'{str(field)}'")
+            raise ImproperlyConfigured(
+                f"Model '{model_name}' has no field'{str(field)}'"
+            )
 
-    
     fields = (get_attr_of_object(instance, field) for field in slug_fields)
     slug = " ".join(fields)
     instance.slug = slugify(slug)
 
+
 @receiver(pre_save, sender=Menu)
 def add_route(sender, instance, **kwargs):
     instance.route = instance.get_route()
+
 
 @receiver(post_save, sender=Menu)
 def check(sender, instance, **kwargs):
@@ -62,7 +64,7 @@ def check(sender, instance, **kwargs):
         menu.save()
         for submenu in menu.submenus.all():
             update_route(submenu)
-        
+
     def update_groups():
         for menu in Menu.objects.all():
             menu.is_group = bool(menu.submenus.count())
@@ -73,5 +75,3 @@ def check(sender, instance, **kwargs):
 
     post_save.connect(check, sender=Menu)
     pre_save.connect(add_route, sender=Menu)
-
-

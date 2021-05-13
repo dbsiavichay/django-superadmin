@@ -5,7 +5,7 @@ from django.shortcuts import redirect
 from django.db import transaction
 from django.contrib import messages
 
-#Utils
+# Utils
 from superadmin.utils import get_label_of_field
 
 
@@ -22,51 +22,55 @@ class FormsetList:
         self.formsets = dict()
 
         for key, formset_class in formsets.items():
-            self.formsets.update({
-                key: {
-                    "class": formset_class,
+            self.formsets.update(
+                {
+                    key: {
+                        "class": formset_class,
+                    }
                 }
-            })
+            )
 
     def is_valid(self):
-        errors = [fs["instance"].errors for fs in self.formsets.values() if not fs["instance"].is_valid()]
+        errors = [
+            fs["instance"].errors
+            for fs in self.formsets.values()
+            if not fs["instance"].is_valid()
+        ]
         return not errors
 
     def get_headers(self):
         headers = {
-            f"{key}_headers": value["headers"]
-            for key, value in self.formsets.items()
+            f"{key}_headers": value["headers"] for key, value in self.formsets.items()
         }
         return headers
 
     def get_instances(self, **kwargs):
         related_initial = None
-        if 'initial' in kwargs and 'related_initial' in kwargs['initial']:
-            related_initial = kwargs.get('initial').get('related_initial')  
+        if "initial" in kwargs and "related_initial" in kwargs["initial"]:
+            related_initial = kwargs.get("initial").get("related_initial")
 
         for key in self.formsets:
             formset_class = self.formsets[key]["class"]
-            if related_initial :
-                kwargs['initial'] = related_initial.get(formset_class.model, [])
+            if related_initial:
+                kwargs["initial"] = related_initial.get(formset_class.model, [])
             else:
-                kwargs['initial'] = []
+                kwargs["initial"] = []
             instance = formset_class(**kwargs)
-            instance.extra += len(kwargs['initial'])
+            instance.extra += len(kwargs["initial"])
 
             headers = [
                 get_label_of_field(formset_class.form.Meta.model, field.name)
                 for field in instance.empty_form.visible_fields()
                 if field.name in formset_class.form.Meta.fields
             ]
-            self.formsets.get(key).update({
-                "instance": instance,
-                "headers": headers,
-            })
+            self.formsets.get(key).update(
+                {
+                    "instance": instance,
+                    "headers": headers,
+                }
+            )
 
-        instances = {
-            key: value["instance"]
-            for key, value in self.formsets.items()
-        }
+        instances = {key: value["instance"] for key, value in self.formsets.items()}
         return instances
 
     def get_formset(self, name):
@@ -87,9 +91,7 @@ class FormsetMixin:
 
         formsets = self.get_formsets()
         headers = self.get_headers()
-        context.update(
-            **formsets, **headers
-        )
+        context.update(**formsets, **headers)
         return context
 
     def formsets_valid(self, formsets, form):
