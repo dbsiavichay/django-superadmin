@@ -39,7 +39,8 @@ class DetailMixin:
         for field in fields:
             label = get_label_of_field(self.object, field)
             value = get_attr_of_object(self.object, field)
-            results[field] = (label, value)
+            widget = self.model._meta.get_field(field).get_internal_type()
+            results[field] = (label, value, widget)
 
         flatten_results = results.values()
         fieldset_results = []
