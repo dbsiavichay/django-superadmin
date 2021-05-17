@@ -73,7 +73,7 @@ class BreadcrumbMixin:
                 self.get_breadcrumb_text("detail") or str(self.object),
                 reverse_lazy(
                     url_name,
-                    kwargs=get_slug_or_pk(self.object),
+                    kwargs=get_slug_or_pk(self.object, slug_field=self.site.slug_field),
                 ),
             )
         )

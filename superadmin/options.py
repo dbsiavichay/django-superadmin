@@ -61,6 +61,7 @@ class ModelSite:
     delete_mixins = ()  # List of mixins that superadmin include in DetailViews
 
     # Prepopulate
+    slug_field = "slug"
     prepopulate_slug = ()
 
     # Options for build queryset
@@ -141,7 +142,7 @@ class ModelSite:
         #     return update_wrapper(wrapper, view)
         urlpatterns = []
 
-        has_slug = hasattr(self.model, "slug")
+        has_slug = hasattr(self.model, self.slug_field)
         route_param = "<slug:slug>" if has_slug else "<int:pk>"
 
         if "list" in self.allow_views:
@@ -180,7 +181,6 @@ class ModelSite:
 
         if "detail" in self.allow_views:
             url_detail_name = self.get_base_url_name("detail")
-
             urlpatterns += [
                 path(
                     route=f"{route_param}/{self.url_detail_suffix}/",

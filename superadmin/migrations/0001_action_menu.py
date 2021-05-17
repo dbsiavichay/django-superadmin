@@ -128,7 +128,7 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "ordering": ("route", "sequence"),
+                "ordering": ("sequence"),
             },
         ),
     ]

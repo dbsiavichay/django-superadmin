@@ -5,7 +5,7 @@ from django.forms.models import model_to_dict
 
 # Local
 from .base import SiteView, get_base_view
-from ..shortcuts import get_object, get_urls_of_site
+from ..shortcuts import get_object_from_site, get_urls_of_site
 from ..utils import import_all_mixins, import_mixin
 
 
@@ -48,7 +48,7 @@ class CreateMixin:
         if self.request.method == "GET":
             slug_or_pk = self.request.GET.get(self.duplicate_param)
             if slug_or_pk:
-                object = get_object(self.model, slug_or_pk)
+                object = get_object_from_site(self.site, slug_or_pk)
                 if object:
                     data = model_to_dict(
                         object,

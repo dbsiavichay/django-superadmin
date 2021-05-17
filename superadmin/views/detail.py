@@ -64,6 +64,9 @@ class DetailMixin:
 
         return flatten_results, fieldset_results
 
+    def get_slug_field(self):
+        return self.site.slug_field or super().get_slug_field()
+
 
 class DetailView(SiteView):
     def view(self, request, *args, **kwargs):

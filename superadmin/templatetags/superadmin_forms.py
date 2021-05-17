@@ -229,7 +229,6 @@ def render_field(parser, token):
             raise TemplateSyntaxError(error_msg + ": %s" % pair)
         dct = match.groupdict()
         attr, value = dct["attr"], parser.compile_filter(dct["value"])
-
         attrs.append((attr, value))
 
     return FieldNode(form_field, attrs)
@@ -260,6 +259,9 @@ class FieldNode(Node):
                 elif key == "type":
                     bounded_field.field.widget.input_type = value.resolve(context)
                 else:
+                    bounded_field = set_attr(
+                        bounded_field, "%s:%s" % (key, value.resolve(context))
+                    )
                     context.update({key: value.resolve(context)})
 
             # Get template name
