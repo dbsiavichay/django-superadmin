@@ -2,6 +2,7 @@
 import inspect
 
 # Django
+from django.conf import settings
 from django.views.generic import View
 from django.urls import reverse, NoReverseMatch
 from django.apps import apps
@@ -26,21 +27,41 @@ def get_object_from_site(site, slug_or_pk):
     return object
 
 
-def get_urls_of_site(site, object=None):
+def get_urls_of_site(site, object=None, user=None):
     urls = {}
+    app = site.model._meta.app_label
+    model = site.model._meta.model_name
     kwargs = get_slug_or_pk(object, slug_field=site.slug_field)
-    for action in ("list", "create", "mass_update", "mass_delete"):
+    for action, perm in (
+        ("list", "view"),
+        ("create", "add"),
+        ("mass_update", "change"),
+        ("mass_delete", "delete"),
+    ):
         try:
             url_name = site.get_url_name(action)
-            urls.update({action: reverse(url_name)})
+            if not user:
+                urls.update({action: reverse(url_name)})
+            elif user.has_perm(f"{app}.{perm}_{model}"):
+                urls.update({action: reverse(url_name)})
         except NoReverseMatch:
-            print("Url not found: %s" % url_name)
+            if settings.DEBUG:
+                print("DEBUG: Url not found: %s" % url_name)
     if not kwargs:
         return urls
-    for action in ("update", "detail", "delete", "duplicate"):
+    for action, perm in (
+        ("update", "change"),
+        ("detail", "view"),
+        ("delete", "delete"),
+        ("duplicate", "add"),
+    ):
         try:
             url_name = site.get_url_name(action)
-            urls.update({action: reverse(url_name, kwargs=kwargs)})
+            if not user:
+                urls.update({action: reverse(url_name, kwargs=kwargs)})
+            elif user.has_perm(f"{app}.{perm}_{model}"):
+                urls.update({action: reverse(url_name, kwargs=kwargs)})
         except NoReverseMatch:
-            print("Url not found: %s" % url_name)
+            if settings.DEBUG:
+                print("DEBUG: Url not found: %s" % url_name)
     return urls

@@ -115,10 +115,10 @@ class ModelSite:
 
     def get_info(self):
         """Obtiene la información del modelo"""
-        # info = cls.model._meta.app_label, cls.model._meta.model_name
-        info = slugify(self.model._meta.app_config.verbose_name), slugify(
-            self.model._meta.verbose_name
-        )
+        info = self.model._meta.app_label, self.model._meta.model_name
+        # info = slugify(self.model._meta.app_config.verbose_name), slugify(
+        #    self.model._meta.verbose_name
+        # )
         return info
 
     # Url methods

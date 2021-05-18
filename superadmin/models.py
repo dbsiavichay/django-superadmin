@@ -8,6 +8,7 @@ from django.utils.text import slugify
 from django.apps import apps
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 
 # Local
 from . import site
@@ -38,7 +39,8 @@ class Action(models.Model):
         unique_together = ("app_label", "element")
         ordering = ("name",)
 
-    def get_model_class(self):
+    @property
+    def model(self):
         if self.to != self.ToChoices.MODEL:
             return None
         try:
@@ -47,7 +49,8 @@ class Action(models.Model):
         except LookupError:
             return None
 
-    def get_view_class(self):
+    @property
+    def view(self):
         if self.to != self.ToChoices.CLASSVIEW:
             return None
         try:
@@ -119,9 +122,9 @@ class Menu(models.Model):
     def get_url(self):
         url_name = None
         if self.action.to == Action.ToChoices.MODEL:
-            model_class = self.action.get_model_class()
-            if model_class and model_class in site._registry:
-                model_site = site._registry[model_class]
+            model_class = self.action.model
+            if model_class and site.is_registered(model_class):
+                model_site = site.get_modelsite(model_class)
                 url_name = model_site.get_url_name("list")
         else:
             url_name = f"site:{slugify(self.name)}"
@@ -129,6 +132,6 @@ class Menu(models.Model):
             url = reverse(url_name)
             return url
         except NoReverseMatch:
-            print("Not found url for %s" % url_name)
-
-        return url_name
+            if settings.DEBUG:
+                print("DEBUG: Not found url for %s" % url_name)
+        return "/page/not-found/"

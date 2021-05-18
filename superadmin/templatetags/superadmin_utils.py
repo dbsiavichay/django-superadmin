@@ -39,7 +39,12 @@ def multiply(value, number):
 @register.simple_tag()
 def site_url(instance, action):
     model_site = site.get_modelsite(instance.__class__)
-    urls = get_urls_of_site(model_site, instance)
+    urls = get_urls_of_site(model_site, object=instance)
     if action in urls:
         return urls[action]
     raise NoReverseMatch("The action '%s' doesn't exist in the model" % action)
+
+
+@register.simple_tag()
+def has_perm(user, perm):
+    return user.has_perm(perm)

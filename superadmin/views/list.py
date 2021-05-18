@@ -70,7 +70,9 @@ class ListMixin:
             {
                 "instance": instance,
                 "values": self.get_values(instance),
-                "urls": get_urls_of_site(self.site, instance),
+                "urls": get_urls_of_site(
+                    self.site, object=instance, user=self.request.user
+                ),
             }
             for instance in queryset
         ]

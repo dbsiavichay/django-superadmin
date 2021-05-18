@@ -5,7 +5,6 @@ from django.contrib.admin.utils import flatten
 
 # Local
 from .base import SiteView, get_base_view
-from ..shortcuts import get_urls_of_site
 from ..utils import get_label_of_field, get_attr_of_object, import_all_mixins
 
 
@@ -22,7 +21,6 @@ class DetailMixin:
         opts = {
             "results": fieldset_results,
             "flatten_results": flatten_results,
-            "urls": get_urls_of_site(self.site, self.object),
         }
 
         if "site" in context:

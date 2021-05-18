@@ -1,6 +1,7 @@
 """Classes and functios for register site models"""
 
 # Django
+from django.conf import settings
 from django.utils.text import slugify
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models.base import ModelBase
@@ -59,9 +60,9 @@ class Site:
 
     def get_model_urls(self, menu):
         urlpatterns = []
-        model = menu.action.get_model_class()
-        if model and model in self._registry:
-            model_site = self._registry[model]
+        model = menu.action.model
+        if model and self.is_registered(model):
+            model_site = self.get_modelsite(model)
             urlpatterns = [path(f"{menu.route}/", include(model_site.urls))]
 
         return urlpatterns
@@ -71,11 +72,10 @@ class Site:
 
         urlpatterns = []
         mixin = import_mixin("BreadcrumbMixin")
-        view = menu.action.get_view_class()
+        view = menu.action.view
         view.menu = None
         if PermissionRequiredMixin not in view.__bases__:
             view.__bases__ = (PermissionRequiredMixin, mixin, *view.__bases__)
-
         view.permission_required = menu.action.get_permissions()
         if view:
             urlpatterns = [
@@ -85,7 +85,6 @@ class Site:
                     name=slugify(menu.name),
                 )
             ]
-
         return urlpatterns
 
     def get_menu_urls(self, menu):
@@ -98,14 +97,14 @@ class Site:
         return urlpatterns
 
     def get_menus(self):
-        menus = None
+        menus = []
         try:
             Menu = apps.get_model("superadmin", "Menu")
             if Menu._meta.db_table in connection.introspection.table_names():
-                menus = Menu.objects.all()
+                menus = Menu.objects.select_related("action").all()
         except LookupError as error:
-            print(error)
-            menus = None
+            if settings.DEBUG:
+                print(error)
         return menus
 
     def get_urls(self):
@@ -118,16 +117,17 @@ class Site:
         #       return update_wrapper(wrapper, view)
 
         urlpatterns = []
+        sites_in_menu = []
         menus = self.get_menus()
-        if menus:
-            for menu in menus:
-                urlpatterns.extend(self.get_menu_urls(menu))
-        else:
-            for model, model_site in self._registry.items():
+        for menu in menus:
+            urlpatterns += self.get_menu_urls(menu)
+            if self.is_registered(menu.action.model):
+                sites_in_menu.append(menu.action.model)
+        for model, model_site in self._registry.items():
+            if model not in sites_in_menu:
                 info = model_site.get_info()
                 url_format = "%s/%s/" % info
                 urlpatterns += [path(url_format, include(model_site.urls))]
-
         return urlpatterns
 
     @property

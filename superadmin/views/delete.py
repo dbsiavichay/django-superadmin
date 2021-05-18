@@ -15,24 +15,11 @@ class DeleteMixin:
 
     action = "delete"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        opts = {
-            "urls": get_urls_of_site(self.site, self.object),
-        }
-
-        if "site" in context:
-            context["site"].update(opts)
-        else:
-            context.update({"site": opts})
-        return context
-
     def get_slug_field(self):
         return self.site.slug_field or super().get_slug_field()
 
     def get_success_url(self):
-        urls = get_urls_of_site(self.site, self.object)
+        urls = get_urls_of_site(self.site, object=self.object, user=self.request.user)
         return urls.get(self.site.delete_success_url)
 
 
