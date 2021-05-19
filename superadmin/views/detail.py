@@ -5,7 +5,8 @@ from django.contrib.admin.utils import flatten
 
 # Local
 from .base import SiteView, get_base_view
-from ..utils import get_label_of_field, get_attr_of_object, import_all_mixins
+from ..services import FieldService
+from ..utils import import_all_mixins
 
 
 class DetailMixin:
@@ -35,10 +36,10 @@ class DetailMixin:
         fields = fields if fields else (field.name for field in self.model._meta.fields)
         results = {}
         for field in fields:
-            label = get_label_of_field(self.object, field)
-            value = get_attr_of_object(self.object, field)
-            widget = self.model._meta.get_field(field).get_internal_type()
-            results[field] = (label, value, widget)
+            label = FieldService.get_field_label(self.object, field)
+            value = FieldService.get_field_value(self.object, field)
+            type = FieldService.get_field_type(self.object, field)
+            results[field] = (label, value, type)
 
         flatten_results = results.values()
         fieldset_results = []

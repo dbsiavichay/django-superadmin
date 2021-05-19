@@ -7,6 +7,16 @@ from django.db.models import Q
 
 
 class FilterMixin:
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        opts = {"all_records": self.all_records}
+        if "site" in context:
+            context["site"].update(opts)
+        else:
+            context.update({"site": opts})
+
+        return context
+
     def get_params(self, value):
         args = []
         for field in self.site.search_fields:
@@ -17,6 +27,7 @@ class FilterMixin:
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        self.all_records = queryset.count()
         search_value = self.request.GET.get("search")
         if search_value:
             args = self.get_params(search_value)

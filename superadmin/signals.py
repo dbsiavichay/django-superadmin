@@ -11,7 +11,7 @@ from django.apps import apps
 from .models import Menu
 
 # Local
-from .utils import get_attr_of_object
+from .services import FieldService
 from . import site
 
 
@@ -43,7 +43,7 @@ def prepopulate_slug(sender, instance, **kwargs):
                 f"Model '{model_name}' has no field'{str(field)}'"
             )
 
-    fields = (get_attr_of_object(instance, field) for field in slug_fields)
+    fields = (FieldService.get_field_value(instance, field) for field in slug_fields)
     slug = " ".join(fields)
     instance.slug = slugify(slug)
 

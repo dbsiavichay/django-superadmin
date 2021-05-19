@@ -9,10 +9,7 @@ from ..shortcuts import get_urls_of_site
 from ..utils import import_all_mixins
 
 # Utilities
-from ..utils import (
-    get_label_of_field,
-    get_attr_of_object,
-)
+from ..services import FieldService
 
 
 class ListMixin:
@@ -53,14 +50,14 @@ class ListMixin:
 
     def get_list_fields(self):
         fields = [
-            (name, get_label_of_field(self.model, name))
+            (name, FieldService.get_field_label(self.model, name))
             for name in self.site.list_fields
         ]
         return fields
 
     def get_editable_fields(self):
         fields = [
-            (name, get_label_of_field(self.model, name))
+            (name, FieldService.get_field_label(self.model, name))
             for name in self.site.form_class._meta.fields
         ]
         return fields
@@ -79,7 +76,10 @@ class ListMixin:
         return rows
 
     def get_values(self, instance):
-        values = [get_attr_of_object(instance, name) for name in self.site.list_fields]
+        values = [
+            FieldService.get_field_value(instance, name)
+            for name in self.site.list_fields
+        ]
         return values
 
 

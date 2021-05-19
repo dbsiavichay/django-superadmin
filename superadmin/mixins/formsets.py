@@ -6,7 +6,7 @@ from django.db import transaction
 from django.contrib import messages
 
 # Utils
-from superadmin.utils import get_label_of_field
+from superadmin.services import FieldService
 
 
 class FormsetList:
@@ -59,7 +59,7 @@ class FormsetList:
             instance.extra += len(kwargs["initial"])
 
             headers = [
-                get_label_of_field(formset_class.form.Meta.model, field.name)
+                FieldService.get_field_label(formset_class.form.Meta.model, field.name)
                 for field in instance.empty_form.visible_fields()
                 if field.name in formset_class.form.Meta.fields
             ]
