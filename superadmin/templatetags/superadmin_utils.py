@@ -2,6 +2,8 @@
 import json
 
 # Django
+from django.core.exceptions import ImproperlyConfigured
+from django.conf import settings
 from django import template
 from django.urls import NoReverseMatch
 
@@ -48,3 +50,16 @@ def site_url(instance, action):
 @register.simple_tag()
 def has_perm(user, perm):
     return user.has_perm(perm)
+
+
+@register.simple_tag()
+def detail_widget(label, value, widget):
+    if widget not in settings.TEMPLATE_WIDGETS_DETAIL:
+        if "default" not in settings.TEMPLATE_WIDGETS_DETAIL:
+            raise ImproperlyConfigured(
+                f"Does not exist template name for '{widget}' or default widget template."
+            )
+        template_name = settings.TEMPLATE_WIDGETS_DETAIL.get("default")
+    else:
+        template_name = settings.TEMPLATE_WIDGETS_DETAIL.get(widget)
+    return template_name

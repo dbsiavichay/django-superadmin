@@ -29,7 +29,6 @@ def import_all_mixins():
         "BreadcrumbMixin",
         "UrlMixin",
         "TemplateMixin",
-        "FilterMixin",
     )
     for name in names:
         mixin = import_mixin(name)

@@ -6,7 +6,7 @@ from django.views.generic import ListView as BaseListView
 # Local
 from .base import SiteView, get_base_view
 from ..shortcuts import get_urls_of_site
-from ..utils import import_all_mixins
+from ..utils import import_mixin, import_all_mixins
 
 # Utilities
 from ..services import FieldService
@@ -87,7 +87,8 @@ class ListView(SiteView):
     def view(self, request, *args, **kwargs):
         """ Crear la List View del modelo """
         # Class
-        mixins = import_all_mixins() + [ListMixin]
+        FilterMixin = import_mixin("FilterMixin")
+        mixins = import_all_mixins() + [FilterMixin, ListMixin]
         View = get_base_view(BaseListView, mixins, self.get_site())
 
         # Set attriburtes

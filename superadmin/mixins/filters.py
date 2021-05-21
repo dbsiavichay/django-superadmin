@@ -3,6 +3,7 @@ import operator
 from functools import reduce
 
 # Django
+from django.http import Http404
 from django.db.models import Q
 
 # Local
@@ -82,9 +83,10 @@ class FilterMixin:
     def get_filter_fields(self):
         fields = []
         for field in self.site.filter_fields:
+            field_name = field.split(":")[0]
             fields.append(
                 {
-                    "name": field,
+                    "name": field_name,
                     "label": FieldService.get_field_label(self.site.model, field),
                     "app_name": self.site.model._meta.app_label,
                     "model_model": self.site.model._meta.model_name,
@@ -104,7 +106,16 @@ class FilterMixin:
             lookup = self.has_lookup(key)
             lookup_label = FilterService.get_lookup_label(lookup)
             field = key.split(f"__{lookup}")[0]
-            field_label = FieldService.get_field_label(self.site.model, field)
+            for filter_field in self.site.filter_fields:
+                if field in filter_field:
+                    try:
+                        field, field_label = filter_field.split(":")
+                    except ValueError:
+                        field_label = FieldService.get_field_label(
+                            self.site.model, field
+                        )
+            if not field_label:
+                raise Http404
             choices = FilterService.get_choices(self.site.model, field)
             if choices:
                 search = int(value) if type(value) == bool else value
@@ -120,6 +131,7 @@ class FilterMixin:
             else:
                 search = value
                 search_label = value
+
             filters.append(
                 {
                     "field": field,

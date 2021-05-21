@@ -30,6 +30,9 @@ class FieldService:
     def get_field_label(cls, model, field):
         names = field.split("__")
         name = names.pop(0)
+        if "__str__" in field:
+            label = str(model._meta.verbose_name)
+            return pretty_name(label)
         try:
             name, verbose_name = name.split(":")
             return pretty_name(verbose_name)
@@ -40,21 +43,19 @@ class FieldService:
                 model._meta.model_name if hasattr(model, "_meta") else str(model)
             )
             raise AttributeError(f"Does not exist attribute <{name}> for {str_model}.")
-        if len(names):
-            if hasattr(model, "_meta"):
-                return cls.get_field_label(
-                    model._meta.get_field(name).related_model, "__".join(names)
-                )
-            else:
-                attr = getattr(model, name)
-                return cls.get_field_label(
-                    attr() if callable(attr) else attr, "__".join(names)
-                )
         try:
             field = model._meta.get_field(name)
-            label = field.verbose_name if hasattr(field, "verbose_name") else name
+            if len(names):
+                related_model = field.related_model
+                return cls.get_field_label(related_model, "__".join(names))
+            label = field.verbose_name
         except FieldDoesNotExist:
-            label = str(model._meta.verbose_name) if name == "__str__" else name
+            attr = getattr(object, name)
+            if len(names):
+                return cls.get_field_label(
+                    attr(model) if callable(attr) else attr, "__".join(names)
+                )
+            label = name
         return pretty_name(label)
 
     @classmethod
@@ -67,23 +68,24 @@ class FieldService:
                 f"Does not exist attribute <{name}> for {str(object)}."
             )
         if len(names):
-            return cls.get_field_value(getattr(object, name), "__".join(names))
+            attr = getattr(object, name)
+            return cls.get_field_value(
+                attr() if callable(attr) else attr, "__".join(names)
+            )
         try:
             field = object._meta.get_field(name)
-            if hasattr(field, "choices") and field.choices:
-                name = f"get_{name}_display"
+            if field.choices:
+                return dict(field.choices).get(field.value_from_object(object))
+            elif field.related_model:
+                return field.related_model.objects.get()
+            else:
+                return field.value_from_object(object)
         except FieldDoesNotExist:
-            pass
-        attr = getattr(object, name)
-        if hasattr(attr, "__class__") and (
-            attr.__class__.__name__ == "ManyRelatedManager"
-            or attr.__class__.__name__ == "RelatedManager"
-        ):
-            attr = [str(obj) for obj in attr.all()]
-        attr = attr() if callable(attr) else attr
-        if isinstance(attr, bool):
-            attr = settings.BOOLEAN_YES if attr else settings.BOOLEAN_NO
-        return format_html(str(attr))
+            attr = getattr(object, name)
+            attr = attr() if callable(attr) else attr
+            if isinstance(attr, bool):
+                attr = settings.BOOLEAN_YES if attr else settings.BOOLEAN_NO
+            return format_html(str(attr))
 
     @classmethod
     def get_field_type(cls, model, field):
