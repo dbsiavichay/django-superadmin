@@ -5,108 +5,134 @@ from functools import reduce
 # Django
 from django.db.models import Q
 
+# Local
+from ..services import FieldService, FilterService
+
 
 class FilterMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        opts = {"all_records": self.all_records}
+        opts = {
+            "all_records": self.all_records,
+            "filter_fields": self.get_filter_fields(),
+            "current_filters": self.get_current_filters(),
+        }
         if "site" in context:
             context["site"].update(opts)
         else:
             context.update({"site": opts})
-
         return context
 
-    def get_params(self, value):
+    def get_params(self, exclude=False):
+        DEFAULT = "search"
+        EXCLUDE = "__exclude"
+        params = {}
+        if DEFAULT in self.request.GET:
+            params[DEFAULT] = self.request.GET.get(DEFAULT)
+            return params
+        lookup_params = {
+            key: value
+            for key, value in self.request.GET.items()
+            if self.has_lookup(key)
+        }
+        for key, value in lookup_params.items():
+            lookup = self.has_lookup(key)
+            type = FieldService.get_field_type(
+                self.site.model, key.split(f"__{lookup}")[0]
+            )
+            if type == "BooleanField":
+                try:
+                    value = bool(int(value))
+                except ValueError:
+                    value = False
+            if exclude:
+                if EXCLUDE in key:
+                    params[key.split(EXCLUDE)[0]] = value
+            elif EXCLUDE not in key:
+                params[key] = value
+        return params
+
+    def get_query(self, exclude=False):
         args = []
-        for field in self.site.search_fields:
-            args.append(Q(**{field: value}))
+        params = self.get_params(exclude=exclude)
+        op = operator.__or__
+        if "search" in params:
+            value = params.get("search")
+            for field in self.site.search_fields:
+                args.append(Q(**{field: value}))
+        else:
+            for field, value in params.items():
+                args.append(Q(**{field: value}))
+            op = operator.__and__
         if args:
-            return reduce(operator.__or__, args)
+            return reduce(op, args)
         return args
 
     def get_queryset(self):
         queryset = super().get_queryset()
         self.all_records = queryset.count()
-        search_value = self.request.GET.get("search")
-        if search_value:
-            args = self.get_params(search_value)
-            if args:
-                queryset = queryset.filter(args)
+        query = self.get_query()
+        if query:
+            queryset = queryset.filter(query)
+        exclude = self.get_query(exclude=True)
+        if exclude:
+            queryset = queryset.exclude(exclude)
         return queryset
 
-    """
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        opts = {
-            "order_by": self._get_headers(),
-            "search_fields": self._get_search_fields_with_labels(),
-            "active_searches": self._clean_search_params(),
-        }
-
-        if "site" in context:
-            context["site"].update(opts)
-        else:
-            context.update({
-                "site": opts
-            })
-    
-        return context
-
-    def reduce_queryset(self, params, queryset, op):
-        args = []
-        for field, value, verbose_name in params:
-            action = '__icontains'
-            if self.model._meta.get_field(field).__class__.__name__ in (
-                'CharField',
-                'TextField',
-            ):
-                action = '__unaccent' + action
-            args.append(Q(**{field + action: value}))
-        if args:
-            queryset = queryset.filter(reduce(op, args))
-        return queryset
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-
-        params = self._clean_search_params()
-        if 'sf' in self.request.GET:
-            return self.reduce_queryset(params, queryset, operator.__or__)
-
-        queryset = self.reduce_queryset(params, queryset, operator.__and__)
-        return queryset
-
-    def _clean_search_params(self):
-        params = []
-        if 'sf' in self.request.GET:
-            value = self.request.GET.get('sf')
-            for field in self.site.search_fields:
-                verbose_name = get_field_label_of_model(
-                    self.site.model, '.'.join(field.split('__'))
-                )
-                params.append((field, value, verbose_name))
-            return params
-
-        for key in self.request.GET.keys():
-            if key.startswith('sf_') and key[3:] in self.site.search_fields:
-                field = key[3:]
-                verbose_name = get_field_label_of_model(
-                    self.site.model, '.'.join(field.split('__'))
-                )
-                params.append((field, self.request.GET.get(key), verbose_name))
-        return params
-
-    def _get_search_fields_with_labels(self):
+    def get_filter_fields(self):
         fields = []
-        for field in self.site.search_fields:
-            point_field = '.'.join(field.split('__'))
+        for field in self.site.filter_fields:
             fields.append(
-                (
-                    f'sf_{field}',
-                    get_field_label_of_model(self.model, point_field),
-                )
+                {
+                    "name": field,
+                    "label": FieldService.get_field_label(self.site.model, field),
+                    "app_name": self.site.model._meta.app_label,
+                    "model_model": self.site.model._meta.model_name,
+                }
             )
         return fields
-    """
+
+    def get_current_filters(self):
+        filters = []
+        params = {
+            **self.get_params(exclude=True),
+            **self.get_params(exclude=False),
+        }
+        if "search" in params:
+            return filters
+        for key, value in params.items():
+            lookup = self.has_lookup(key)
+            lookup_label = FilterService.get_lookup_label(lookup)
+            field = key.split(f"__{lookup}")[0]
+            field_label = FieldService.get_field_label(self.site.model, field)
+            choices = FilterService.get_choices(self.site.model, field)
+            if choices:
+                search = int(value) if type(value) == bool else value
+                if hasattr(choices, "model"):
+                    search_label = str(choices.get(pk=value))
+                else:
+                    try:
+                        search = int(search)
+                    except ValueError:
+                        pass
+                    choices = dict(choices)
+                    search_label = choices.get(search)
+            else:
+                search = value
+                search_label = value
+            filters.append(
+                {
+                    "field": field,
+                    "field_label": field_label,
+                    "lookup": lookup,
+                    "lookup_label": lookup_label,
+                    "search": search,
+                    "search_label": search_label,
+                }
+            )
+        return filters
+
+    def has_lookup(self, field):
+        for lookup in FilterService.get_flatten_lookups():
+            if lookup in field:
+                return lookup

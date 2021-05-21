@@ -1,5 +1,5 @@
 # Django
-from django.core.exceptions import FieldDoesNotExist
+from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
 from django.forms.utils import pretty_name
 from django.utils.html import format_html
 
@@ -7,6 +7,25 @@ from . import settings
 
 
 class FieldService:
+    @classmethod
+    def get_field(cls, model, field):
+        names = field.split("__")
+        name = names.pop(0)
+        try:
+            if len(names):
+                related_model = model._meta.get_field(name).related_model
+                if related_model:
+                    return cls.get_field(related_model, "__".join(names))
+                else:
+                    raise ImproperlyConfigured(f"The field <{name}> not is an object")
+            field = model._meta.get_field(name)
+            return field
+        except FieldDoesNotExist:
+            str_model = (
+                model._meta.model_name if hasattr(model, "_meta") else str(model)
+            )
+            raise AttributeError(f"Does not exist attribute <{name}> for {str_model}")
+
     @classmethod
     def get_field_label(cls, model, field):
         names = field.split("__")
@@ -17,11 +36,10 @@ class FieldService:
         except ValueError:
             pass
         if not hasattr(model, name):
-            try:
-                str_model = f"<{model._meta.model_name}>"
-            except:
-                str_model = str(model)
-            raise AttributeError(f"No existe le atributo <{name}> para {str_model}.")
+            str_model = (
+                model._meta.model_name if hasattr(model, "_meta") else str(model)
+            )
+            raise AttributeError(f"Does not exist attribute <{name}> for {str_model}.")
         if len(names):
             if hasattr(model, "_meta"):
                 return cls.get_field_label(
@@ -45,7 +63,9 @@ class FieldService:
         name = names.pop(0)
         name = name.split(":")[0]
         if not hasattr(object, name):
-            raise AttributeError(f"No existe le atributo <{name}> para {str(object)}.")
+            raise AttributeError(
+                f"Does not exist attribute <{name}> for {str(object)}."
+            )
         if len(names):
             return cls.get_field_value(getattr(object, name), "__".join(names))
         try:
@@ -70,11 +90,10 @@ class FieldService:
         names = field.split("__")
         name = names.pop(0)
         if not hasattr(model, name):
-            try:
-                str_model = f"<{model._meta.model_name}>"
-            except:
-                str_model = str(model)
-            raise AttributeError(f"No existe le atributo <{name}> para {str_model}.")
+            str_model = (
+                model._meta.model_name if hasattr(model, "_meta") else str(model)
+            )
+            raise AttributeError(f"Does not exist attribute <{name}> for {str_model}.")
         if len(names):
             if hasattr(model, "_meta"):
                 return cls.get_field_type(
@@ -91,3 +110,71 @@ class FieldService:
         except FieldDoesNotExist:
             type = "Function"
         return type
+
+
+class FilterService:
+    LOOKUPS = {
+        "iexact": "Es igual a",
+        "exact": "Es igual a",
+        "iexact__exclude": "No es igual a",
+        "exact__exclude": "No es igual a",
+        "icontains": "Contiene",
+        "contains": "Contiene",
+        "icontains__exclude": "No contiene",
+        "contains__exclude": "No contiene",
+        "gte": "Mayor o igual que",
+        "lte": "Meno o igual que",
+    }
+
+    @classmethod
+    def get_lookup_label(cls, lookup):
+        return cls.LOOKUPS.get(lookup)
+
+    @classmethod
+    def get_flatten_lookups(cls):
+        return cls.LOOKUPS.keys()
+
+    @classmethod
+    def get_field_lookups(cls, model, field):
+        field_lookups = []
+        field = FieldService.get_field(model, field)
+        if field.get_internal_type() == "BooleanField":
+            field_lookups = [
+                ("exact", cls.get_lookup_label("exact")),
+                ("exact__exclude", cls.get_lookup_label("exact__exclude")),
+            ]
+            return field_lookups
+        lookups = [
+            ("iexact", "exact"),
+            ("icontains", "contains"),
+            ("gte",),
+            ("lte",),
+        ]
+        allow_lookups = list(field.get_lookups().keys())
+        for pair in lookups:
+            for lookup in pair:
+                if lookup in allow_lookups:
+                    field_lookups.append((lookup, cls.get_lookup_label(lookup)))
+                    if "exact" in lookup or "contains" in lookup:
+                        field_lookups.append(
+                            (
+                                f"{lookup}__exclude",
+                                cls.get_lookup_label(f"{lookup}__exclude"),
+                            )
+                        )
+                    break
+        return field_lookups
+
+    @classmethod
+    def get_choices(self, model, field):
+        type = FieldService.get_field_type(model, field)
+        field = FieldService.get_field(model, field)
+        if type in ("ForeignKey", "OneToOneField", "ManyToManyField"):
+            return field.related_model.objects.all()
+        elif type == "BooleanField":
+            choices = [(1, "Verdadero"), (0, "False")]
+        elif field.choices:
+            choices = list(field.choices)
+        else:
+            choices = []
+        return choices

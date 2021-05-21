@@ -1,6 +1,7 @@
 """Classes and functios for register site models"""
 
 # Django
+from superadmin.services import FieldService
 from django.conf import settings
 from django.utils.text import slugify
 from django.core.exceptions import ImproperlyConfigured
@@ -9,6 +10,8 @@ from django.db import connection
 from django.urls import path, include
 from django.apps import apps
 
+# Local
+from .views import FilterView
 from .utils import import_mixin
 
 
@@ -128,6 +131,13 @@ class Site:
                 info = model_site.get_info()
                 url_format = "%s/%s/" % info
                 urlpatterns += [path(url_format, include(model_site.urls))]
+        urlpatterns += [
+            path(
+                route="filter/<slug:app>/<slug:model>/<slug:field>/",
+                view=FilterView.as_view(),
+                name="filter",
+            )
+        ]
         return urlpatterns
 
     @property

@@ -70,6 +70,7 @@ class ModelSite:
 
     # Filter and ordering
     search_fields = ()  # Used for create searchs method by specified fields
+    filter_fields = ()
     order_by = ()  # User for crate ordering methods by specified fields
 
     # Urls
