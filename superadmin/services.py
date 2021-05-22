@@ -77,7 +77,9 @@ class FieldService:
             if field.choices:
                 return dict(field.choices).get(field.value_from_object(object))
             elif field.related_model:
-                return field.related_model.objects.get()
+                return field.related_model.objects.get(
+                    pk=field.value_from_object(object)
+                )
             else:
                 return field.value_from_object(object)
         except FieldDoesNotExist:
