@@ -7,15 +7,18 @@ from . import settings
 
 
 class FieldService:
+    FIELD_SEPARATOR = "__"
+    LABEL_SEPARATOR = ":"
+
     @classmethod
     def get_field(cls, model, field):
-        names = field.split("__")
+        names = field.split(cls.FIELD_SEPARATOR)
         name = names.pop(0)
         try:
             if len(names):
                 related_model = model._meta.get_field(name).related_model
                 if related_model:
-                    return cls.get_field(related_model, "__".join(names))
+                    return cls.get_field(related_model, cls.FIELD_SEPARATOR.join(names))
                 else:
                     raise ImproperlyConfigured(f"The field <{name}> not is an object")
             field = model._meta.get_field(name)
@@ -28,16 +31,16 @@ class FieldService:
 
     @classmethod
     def get_field_label(cls, model, field):
-        names = field.split("__")
-        name = names.pop(0)
-        if "__str__" in field:
-            label = str(model._meta.verbose_name)
-            return pretty_name(label)
         try:
-            name, verbose_name = name.split(":")
+            name, verbose_name = field.split(cls.LABEL_SEPARATOR)
             return pretty_name(verbose_name)
         except ValueError:
             pass
+        if "__str__" in field:
+            label = str(model._meta.verbose_name)
+            return pretty_name(label)
+        names = field.split(cls.FIELD_SEPARATOR)
+        name = names.pop(0)
         if not hasattr(model, name):
             str_model = (
                 model._meta.model_name if hasattr(model, "_meta") else str(model)
@@ -47,22 +50,27 @@ class FieldService:
             field = model._meta.get_field(name)
             if len(names):
                 related_model = field.related_model
-                return cls.get_field_label(related_model, "__".join(names))
+                return cls.get_field_label(
+                    related_model, cls.FIELD_SEPARATOR.join(names)
+                )
             label = field.verbose_name
         except FieldDoesNotExist:
             attr = getattr(object, name)
             if len(names):
                 return cls.get_field_label(
-                    attr(model) if callable(attr) else attr, "__".join(names)
+                    attr(model) if callable(attr) else attr,
+                    cls.FIELD_SEPARATOR.join(names),
                 )
             label = name
         return pretty_name(label)
 
     @classmethod
     def get_field_value(cls, object, field):
-        names = field.split("__")
+        if "__str__" in field:
+            return object
+        field = field.split(cls.LABEL_SEPARATOR)[0]
+        names = field.split(cls.FIELD_SEPARATOR)
         name = names.pop(0)
-        name = name.split(":")[0]
         if not hasattr(object, name):
             raise AttributeError(
                 f"Does not exist attribute <{name}> for {str(object)}."
@@ -70,7 +78,7 @@ class FieldService:
         if len(names):
             attr = getattr(object, name)
             return cls.get_field_value(
-                attr() if callable(attr) else attr, "__".join(names)
+                attr() if callable(attr) else attr, cls.FIELD_SEPARATOR.join(names)
             )
         try:
             field = object._meta.get_field(name)
@@ -94,7 +102,7 @@ class FieldService:
 
     @classmethod
     def get_field_type(cls, model, field):
-        names = field.split("__")
+        names = field.split(cls.FIELD_SEPARATOR)
         name = names.pop(0)
         if not hasattr(model, name):
             str_model = (
@@ -104,12 +112,13 @@ class FieldService:
         if len(names):
             if hasattr(model, "_meta"):
                 return cls.get_field_type(
-                    model._meta.get_field(name).related_model, "__".join(names)
+                    model._meta.get_field(name).related_model,
+                    cls.FIELD_SEPARATOR.join(names),
                 )
             else:
                 attr = getattr(model, name)
                 return cls.get_field_type(
-                    attr() if callable(attr) else attr, "__".join(names)
+                    attr() if callable(attr) else attr, cls.FIELD_SEPARATOR.join(names)
                 )
         try:
             field = model._meta.get_field(name)
