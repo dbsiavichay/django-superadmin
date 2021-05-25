@@ -63,7 +63,7 @@ class CreateMixin:
         return initial
 
     def get_success_url(self):
-        urls = get_urls_of_site(self.site, object=self.object, user=self.request.user)
+        urls = get_urls_of_site(self.site, object=self.object)
         return urls.get(self.site.create_success_url)
 
 

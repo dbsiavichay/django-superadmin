@@ -24,7 +24,7 @@ class UpdateMixin:
         return self.site.slug_field or super().get_slug_field()
 
     def get_success_url(self):
-        urls = get_urls_of_site(self.site, object=self.object, user=self.request.user)
+        urls = get_urls_of_site(self.site, object=self.object)
         return urls.get(self.site.update_success_url)
 
 
