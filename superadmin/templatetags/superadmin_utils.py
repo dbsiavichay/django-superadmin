@@ -47,7 +47,7 @@ def site_url(instance, action):
     raise NoReverseMatch("The action '%s' doesn't exist in the model" % action)
 
 
-@register.simple_tag()
+@register.filter("has_perm")
 def has_perm(user, perm):
     return user.has_perm(perm)
 
