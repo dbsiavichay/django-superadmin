@@ -68,6 +68,8 @@ class FieldService:
     def get_field_value(cls, object, field):
         if "__str__" in field:
             return object
+        if object is None:
+            return object
         field = field.split(cls.LABEL_SEPARATOR)[0]
         names = field.split(cls.FIELD_SEPARATOR)
         name = names.pop(0)
