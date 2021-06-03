@@ -94,6 +94,9 @@ class FormsetMixin:
         context.update(**formsets, **headers)
         return context
 
+    def form_valid(self, form):
+        return redirect(self.get_success_url())
+
     def formsets_valid(self, formsets, form):
         with transaction.atomic():
             self.object = form.save()
@@ -102,7 +105,7 @@ class FormsetMixin:
                 formset.save()
 
         messages.success(self.request, "Se ha guardado correctamente.")
-        return redirect(self.get_success_url())
+        return self.form_valid(form)
 
     def formsets_invalid(self, formsets, form):
         for formset in formsets:

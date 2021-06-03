@@ -12,6 +12,7 @@ class FieldService:
 
     @classmethod
     def get_field(cls, model, field):
+        field = field.split(cls.LABEL_SEPARATOR)[0]
         names = field.split(cls.FIELD_SEPARATOR)
         name = names.pop(0)
         try:
@@ -104,6 +105,7 @@ class FieldService:
 
     @classmethod
     def get_field_type(cls, model, field):
+        field = field.split(cls.LABEL_SEPARATOR)[0]
         names = field.split(cls.FIELD_SEPARATOR)
         name = names.pop(0)
         if not hasattr(model, name):
