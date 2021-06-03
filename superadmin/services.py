@@ -85,9 +85,13 @@ class FieldService:
             )
         try:
             field = object._meta.get_field(name)
-            if field.choices:
+            if hasattr(field, "choices") and field.choices:
                 return dict(field.choices).get(field.value_from_object(object))
             elif field.related_model:
+                if field.one_to_many or field.many_to_many:
+                    raise ImproperlyConfigured(
+                        "OneToMany or ManyToMany is not supported: '%s' " % field.name
+                    )
                 try:
                     return field.related_model.objects.get(
                         pk=field.value_from_object(object)
