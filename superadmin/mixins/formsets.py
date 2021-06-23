@@ -57,9 +57,9 @@ class FormsetList:
                 kwargs["initial"] = []
             instance = formset_class(**kwargs)
             instance.extra += len(kwargs["initial"])
-
             headers = [
-                FieldService.get_field_label(formset_class.form.Meta.model, field.name)
+                # FieldService.get_field_label(formset_class.form.Meta.model, field.name)
+                field.label
                 for field in instance.empty_form.visible_fields()
                 if field.name in formset_class.form.Meta.fields
             ]
@@ -111,7 +111,7 @@ class FormsetMixin:
         for formset in formsets:
             for error in formset.errors:
                 form.errors.update(error)
-        return super().form_invalid(form)
+        return self.form_invalid(form)
 
     def get_headers(self):
         headers = self.formsets.get_headers()
