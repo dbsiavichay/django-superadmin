@@ -6,6 +6,7 @@ from django.http import HttpResponseForbidden, JsonResponse
 
 # Local
 from .base import SiteView, get_base_view
+from ..services import FilterService
 from ..shortcuts import get_urls_of_site
 from ..utils import import_all_mixins, import_mixin
 
@@ -17,6 +18,24 @@ class UpdateMixin:
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        params = FilterService.get_params(self.site.model, self.request.session)
+        queryset = FilterService.filter(self.site.queryset, params)
+        nav = FilterService.get_previous_and_next(queryset, self.object)
+        nav["previous_url"] = (
+            get_urls_of_site(self.site, nav["previous"])[self.action]
+            if nav["previous"]
+            else None
+        )
+        nav["next_url"] = (
+            get_urls_of_site(self.site, nav["next"])[self.action]
+            if nav["next"]
+            else None
+        )
+        opts = {"nav": nav}
+        if "site" in context:
+            context["site"].update(opts)
+        else:
+            context.update({"site": opts})
         context.update(self.site.form_extra_context)
         return context
 

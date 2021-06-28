@@ -11,7 +11,7 @@ from django.urls import path, include
 from django.apps import apps
 
 # Local
-from .views import FilterView
+from .views import FilterView, SessionView
 from .utils import import_mixin
 
 
@@ -136,7 +136,12 @@ class Site:
                 route="filter/<slug:app>/<slug:model>/<slug:field>/",
                 view=FilterView.as_view(),
                 name="filter",
-            )
+            ),
+            path(
+                route="session/<slug:app>/<slug:model>/",
+                view=SessionView.as_view(),
+                name="session",
+            ),
         ]
         return urlpatterns
 

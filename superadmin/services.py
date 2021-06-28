@@ -1,7 +1,12 @@
+# Python
+import operator
+from functools import reduce
+
 # Django
 from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
 from django.forms.utils import pretty_name
 from django.utils.html import format_html
+from django.db.models import Q
 
 from . import settings
 
@@ -150,6 +155,8 @@ class FilterService:
         "lte": "Meno o igual que",
     }
 
+    EXCLUDE = "__exclude"
+
     @classmethod
     def get_lookup_label(cls, lookup):
         return cls.LOOKUPS.get(lookup)
@@ -202,3 +209,82 @@ class FilterService:
         else:
             choices = []
         return choices
+
+    @classmethod
+    def get_previous_and_next(cls, queryset, instance):
+        values = queryset.values_list("id", flat=True).all()
+        for index, value in enumerate(values):
+            if value == instance.pk:
+                previous_id = None if index == 0 else values[index - 1]
+                next_id = None if index == len(values) - 1 else values[index + 1]
+                objects = queryset.filter(id__in=[previous_id, next_id])
+                return {
+                    "previous": previous_id if not previous_id else objects.first(),
+                    "next": next_id if not next_id else objects.last(),
+                    "current_index": index,
+                    "total_entries": len(values),
+                }
+
+    @classmethod
+    def get_params(self, model, session):
+        app = model._meta.app_label
+        model = model._meta.model_name
+        filters = session.get("filters", [])
+        params = {}
+        for elem in filters:
+            if elem["app"] == app and elem["model"] == model:
+                params = elem["params"]
+                break
+        return params
+
+    @classmethod
+    def filter(cls, queryset, params):
+        filter_query, exclude_query = map(
+            lambda params: cls.get_query(params),
+            cls.split_params(queryset.model, params),
+        )
+        if filter_query:
+            queryset = queryset.filter(filter_query)
+        if exclude_query:
+            queryset = queryset.exclude(exclude_query)
+        return queryset
+
+    @classmethod
+    def split_params(cls, model, params):
+        lookup_params = {
+            key: value for key, value in params.items() if cls.has_lookup(key)
+        }
+        filter_params = {
+            key: value for key, value in lookup_params.items() if cls.EXCLUDE not in key
+        }
+        exclude_params = {
+            key.split(cls.EXCLUDE)[0]: value
+            for key, value in lookup_params.items()
+            if cls.EXCLUDE in key
+        }
+        for params in [filter_params, exclude_params]:
+            for key, value in params.items():
+                lookup = cls.has_lookup(key)
+                type = FieldService.get_field_type(model, key.split(f"__{lookup}")[0])
+                if type == "BooleanField":
+                    try:
+                        value = bool(int(value))
+                    except ValueError:
+                        value = False
+                params[key] = value
+        return filter_params, exclude_params
+
+    @classmethod
+    def get_query(cls, params):
+        args = []
+        for field, value in params.items():
+            args.append(Q(**{field: value}))
+        if args:
+            return reduce(operator.__and__, args)
+        return args
+
+    @classmethod
+    def has_lookup(cls, key):
+        for lookup in cls.get_flatten_lookups():
+            if key.endswith(lookup):
+                return lookup

@@ -24,60 +24,22 @@ class FilterMixin:
             context.update({"site": opts})
         return context
 
-    def get_params(self, exclude=False):
-        DEFAULT = "search"
-        EXCLUDE = "__exclude"
-        params = {}
-        if DEFAULT in self.request.GET:
-            params[DEFAULT] = self.request.GET.get(DEFAULT)
-            return params
-        lookup_params = {
-            key: value
-            for key, value in self.request.GET.items()
-            if self.has_lookup(key)
-        }
-        for key, value in lookup_params.items():
-            lookup = self.has_lookup(key)
-            type = FieldService.get_field_type(
-                self.site.model, key.split(f"__{lookup}")[0]
-            )
-            if type == "BooleanField":
-                try:
-                    value = bool(int(value))
-                except ValueError:
-                    value = False
-            if exclude:
-                if EXCLUDE in key:
-                    params[key.split(EXCLUDE)[0]] = value
-            elif EXCLUDE not in key:
-                params[key] = value
-        return params
-
-    def get_query(self, exclude=False):
-        args = []
-        params = self.get_params(exclude=exclude)
-        op = operator.__or__
-        if "search" in params:
-            value = params.get("search")
+    """"
+    def get_query(self):
+        query = []
+        if "search" in self.request.GET:
+            value = self.request.GET.get("search")
             for field in self.site.search_fields:
-                args.append(Q(**{field: value}))
-        else:
-            for field, value in params.items():
-                args.append(Q(**{field: value}))
-            op = operator.__and__
-        if args:
-            return reduce(op, args)
-        return args
+                query.append(Q(**{field: value}))
+        if query:
+            return reduce(operator.__or__, query)
+        return query"""
 
     def get_queryset(self):
         queryset = super().get_queryset()
         self.all_records = queryset.count()
-        query = self.get_query()
-        if query:
-            queryset = queryset.filter(query)
-        exclude = self.get_query(exclude=True)
-        if exclude:
-            queryset = queryset.exclude(exclude)
+        params = FilterService.get_params(self.site.model, self.request.session)
+        queryset = FilterService.filter(queryset, params)
         return queryset
 
     def get_filter_fields(self):
@@ -96,14 +58,9 @@ class FilterMixin:
 
     def get_current_filters(self):
         filters = []
-        params = {
-            **self.get_params(exclude=True),
-            **self.get_params(exclude=False),
-        }
-        if "search" in params:
-            return filters
+        params = FilterService.get_params(self.site.model, self.request.session)
         for key, value in params.items():
-            lookup = self.has_lookup(key)
+            lookup = FilterService.has_lookup(key)
             lookup_label = FilterService.get_lookup_label(lookup)
             field = key.split(f"__{lookup}")[0]
             for filter_field in self.site.filter_fields:
@@ -143,8 +100,3 @@ class FilterMixin:
                 }
             )
         return filters
-
-    def has_lookup(self, field):
-        for lookup in FilterService.get_flatten_lookups():
-            if lookup in field:
-                return lookup

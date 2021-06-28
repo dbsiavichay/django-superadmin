@@ -92,6 +92,9 @@ class ModelSite:
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+        if not self.queryset:
+            self.queryset = self.model._default_manager.all()
+
         if not isinstance(self.allow_views, tuple):
             raise ImproperlyConfigured("The 'allow_views' attribute must be a tuple.")
 
