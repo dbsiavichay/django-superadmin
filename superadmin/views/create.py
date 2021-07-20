@@ -72,13 +72,13 @@ class CreateView(SiteView):
         """ Crear la List View del modelo """
         # Class
         mixins = import_all_mixins() + [CreateMixin]
-        if self.site.inlines and isinstance(self.site.inlines, dict):
-            FormsetMixin = import_mixin("FormsetMixin")
+        if self.site.inlines and isinstance(self.site.inlines, (list, tuple, dict)):
+            InlinesMixin = import_mixin("InlinesMixin")
 
-            class InlineMixin(FormsetMixin):
-                formsets = self.site.inlines
+            class Inlines(InlinesMixin):
+                inlines = self.site.inlines
 
-            mixins += [InlineMixin]
+            mixins += [Inlines]
         View = get_base_view(BaseCreateView, mixins, self.site)
 
         # Set attributes

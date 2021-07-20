@@ -1,4 +1,5 @@
 # Django
+from django.db.models import QuerySet
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.text import slugify
 from django.urls import path
@@ -92,7 +93,7 @@ class ModelSite:
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-        if not self.queryset:
+        if not isinstance(self.queryset, QuerySet):
             self.queryset = self.model._default_manager.all()
 
         if not isinstance(self.allow_views, tuple):

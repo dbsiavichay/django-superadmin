@@ -1,4 +1,4 @@
-from .formsets import FormsetMixin
+from .inlines import InlinesMixin
 from .breadcrumbs import BreadcrumbMixin
 from .urls import UrlMixin
 from .templates import TemplateMixin
