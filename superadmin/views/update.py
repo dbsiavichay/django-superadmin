@@ -23,12 +23,12 @@ class UpdateMixin:
         nav = FilterService.get_previous_and_next(queryset, self.object)
         nav["previous_url"] = (
             get_urls_of_site(self.site, nav["previous"])[self.action]
-            if nav["previous"]
+            if "previous" in nav
             else None
         )
         nav["next_url"] = (
             get_urls_of_site(self.site, nav["next"])[self.action]
-            if nav["next"]
+            if "next" in nav
             else None
         )
         opts = {"nav": nav}
