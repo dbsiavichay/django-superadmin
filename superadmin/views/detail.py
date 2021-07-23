@@ -22,16 +22,17 @@ class DetailMixin:
         params = FilterService.get_params(self.site.model, self.request.session)
         queryset = FilterService.filter(self.site.queryset, params)
         nav = FilterService.get_previous_and_next(queryset, self.object)
-        nav["previous_url"] = (
-            get_urls_of_site(self.site, nav["previous"])[self.action]
-            if "previous" in nav
-            else None
-        )
-        nav["next_url"] = (
-            get_urls_of_site(self.site, nav["next"])[self.action]
-            if "next" in nav
-            else None
-        )
+        if nav:
+            nav["previous_url"] = (
+                get_urls_of_site(self.site, nav["previous"])[self.action]
+                if nav.get("previous")
+                else None
+            )
+            nav["next_url"] = (
+                get_urls_of_site(self.site, nav["next"])[self.action]
+                if nav.get("next")
+                else None
+            )
         opts = {
             "results": fieldset_results,
             "flatten_results": flatten_results,

@@ -1,20 +1,11 @@
-""" Forms for menu """
 # Python
-import inspect
+from functools import reduce
 
 # Django
-from django.forms import BaseModelForm, ChoiceField
+from django.forms import BaseModelForm
 from django.forms.models import ModelFormMetaclass as DjangoModelFormMetaclass
-from django.contrib.auth.models import Permission
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.utils import flatten
-from django.apps import apps
-
-# Models
-from .models import Action, Menu
-
-#
-from .management.commands.base import get_actions_and_elements
+from django.core.exceptions import ImproperlyConfigured
 
 
 class ModelFormMetaclass(DjangoModelFormMetaclass):
@@ -32,75 +23,44 @@ class ModelFormMetaclass(DjangoModelFormMetaclass):
         return new_class
 
     def __fields__(fieldsets):
-        fields = flatten(fieldsets)
+        if isinstance(fieldsets, (list, tuple)):
+            fields = flatten(fieldsets)
+        elif isinstance(fieldsets, dict):
+            fields = reduce(
+                lambda acc, fieldset: acc + flatten(fieldset), fieldsets.values(), []
+            )
+        else:
+            raise ImproperlyConfigured(
+                "The fieldsets must be an instance of list, tuple or dict"
+            )
         return tuple(fields)
 
 
 class ModelForm(BaseModelForm, metaclass=ModelFormMetaclass):
+    def parse(self, fieldset):
+        def wrap(fields):
+            fields = fields if isinstance(fields, (list, tuple)) else [fields]
+            return {
+                "bs_cols": int(12 / len(fields)),
+                "fields": [self[field] for field in fields],
+            }
+
+        fieldset_list = list(map(wrap, fieldset))
+        return fieldset_list
+
     def get_fieldsets(self):
-        sets = list()
-        for fieldset in self._meta.fieldsets:
-            if isinstance(fieldset, tuple):
-                sets.append(
-                    {
-                        "bs_cols": int(12 / len(fieldset)),
-                        "fields": [self[field] for field in fieldset],
-                    }
-                )
-            else:
-                sets.append({"bs_cols": 12, "fields": [self[fieldset]]})
-        return sets
+        fieldsets_list = self._meta.fieldsets
+        fieldsets = (
+            [(None, fieldsets_list)]
+            if isinstance(fieldsets_list, (list, tuple))
+            else fieldsets_list.items()
+        )
+        fieldsets = [
+            {"title": title or "", "fieldset": self.parse(fieldset)}
+            for title, fieldset in fieldsets
+        ]
+
+        return fieldsets
 
     def has_fieldsets(self):
         return hasattr(self._meta, "fieldsets")
-
-
-class BaseActionForm(ModelForm):
-    app_label = ChoiceField(label="Nombre de la aplicacióp")
-    element = ChoiceField(label="Elemento")
-
-    class Meta:
-        model = Action
-        fields = "__all__"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        ct = ContentType.objects.get_for_model(Permission)
-        codenames = (
-            "add_permission",
-            "change_permission",
-            "delete_permission",
-            "view_permission",
-        )
-        queryset = Permission.objects.filter(content_type=ct).exclude(
-            codename__in=codenames
-        )
-        self.fields["permissions"].queryset = queryset
-
-        APP_CHOICES = (
-            (app.label, app.verbose_name.capitalize()) for app in apps.get_app_configs()
-        )
-
-        ELEMENT_CHOICES = [
-            (element, name)
-            for app in apps.get_app_configs()
-            for element, name in get_actions_and_elements(app)[1].items()
-        ]
-
-        self.fields["app_label"].choices = APP_CHOICES
-        self.fields["element"].choices = ELEMENT_CHOICES
-
-
-class BasePermissionForm(ModelForm):
-    class Meta:
-        model = Permission
-        exclude = ("content_type",)
-
-    def save(self, commit=True):
-        perm = super().save(commit=False)
-        ct = ContentType.objects.get_for_model(Permission)
-        perm.content_type = ct
-        if commit:
-            perm.save()
-        return perm
