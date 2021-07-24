@@ -17,7 +17,6 @@ class RenderFieldView(View):
         app_name = kwargs.get("app")
         model_name = kwargs.get("model")
         model = apps.get_model(app_name, model_name)
-        breakpoint()
 
         if site.is_registered(model):
             modelsite = site.get_modelsite(model)

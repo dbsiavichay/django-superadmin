@@ -92,7 +92,6 @@ class ListView(SiteView):
         View = get_base_view(BaseListView, mixins, self.get_site())
 
         # Set attriburtes
-        View.queryset = self.site.queryset
         View.paginate_by = self.site.paginate_by
 
         View.__bases__ = (*self.site.list_mixins, *View.__bases__)

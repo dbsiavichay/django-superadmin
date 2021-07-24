@@ -70,4 +70,5 @@ def get_base_view(ClassView, mixins, site):
     View.__bases__ = (*mixins, *View.__bases__)
     View.site = site
     View.model = site.model
+    View.queryset = site.queryset
     return View

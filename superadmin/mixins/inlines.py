@@ -21,6 +21,7 @@ class InlinesMixin:
                 context.update({key: inline})
         else:
             context.update({inline.prefix: inline for inline in inlines})
+        context["inlines"] = inlines
         return context
 
     def form_valid(self, form):
