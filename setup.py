@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="django-superadmin",  # Replace with your own username
-    version="1.2.2",
+    version="1.2.3",
     author="Denis Siavichay",
     author_email="dbsiavichay@gmail.com",
     description="A Django app for build admin sites like django admin.",
