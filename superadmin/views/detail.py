@@ -1,5 +1,9 @@
 """ """
+# Python
+from functools import reduce
+
 # Django
+from django.core.exceptions import ImproperlyConfigured
 from django.views.generic import DetailView as BaseDetailView
 from django.contrib.admin.utils import flatten
 
@@ -47,36 +51,53 @@ class DetailMixin:
         return context
 
     def get_results(self):
-        fields = flatten(self.site.detail_fields)
+        if isinstance(self.site.detail_fields, (list, tuple)):
+            fields = flatten(self.site.detail_fields)
+        elif isinstance(self.site.detail_fields, dict):
+            fields = reduce(
+                lambda acc, fieldset: acc + flatten(fieldset),
+                self.site.detail_fields.values(),
+                [],
+            )
+        else:
+            raise ImproperlyConfigured(
+                "The fieldsets must be an instance of list, tuple or dict"
+            )
         fields = fields if fields else (field.name for field in self.model._meta.fields)
-        results = {}
-        for field in fields:
-            label = FieldService.get_field_label(self.object, field)
-            value = FieldService.get_field_value(self.object, field)
-            type = FieldService.get_field_type(self.object, field)
-            results[field] = (label, value, type)
+        results = {
+            field: (
+                FieldService.get_field_label(self.object, field),
+                FieldService.get_field_value(self.object, field),
+                FieldService.get_field_type(self.object, field),
+            )
+            for field in fields
+        }
 
         flatten_results = results.values()
-        fieldset_results = []
-        for fieldset in self.site.detail_fields:
-            if isinstance(fieldset, (list, tuple)):
-                fieldset_results.append(
-                    {
-                        "bs_cols": int(12 / len(fieldset)),
-                        "fields": [results.get(field, ()) for field in fieldset],
-                    }
-                )
-            else:
-                fieldset_results.append(
-                    {
-                        "bs_cols": 12,
-                        "fields": [
-                            results.get(fieldset, ()),
-                        ],
-                    }
-                )
 
-        return flatten_results, fieldset_results
+        def parse(fieldset):
+            def wrap(fields):
+                fields = fields if isinstance(fields, (list, tuple)) else [fields]
+                return {
+                    "bs_cols": int(12 / len(fields)),
+                    "fields": [results.get(field, ("", "", "")) for field in fields],
+                }
+
+            fieldset_list = list(map(wrap, fieldset))
+            return fieldset_list
+
+        fieldsets_list = self.site.detail_fields
+        fieldsets = (
+            [(None, fieldsets_list)]
+            if isinstance(fieldsets_list, (list, tuple))
+            else fieldsets_list.items()
+        )
+        fieldsets_results = [
+            {"title": title or "", "fieldset": parse(fieldset)}
+            for title, fieldset in fieldsets
+        ]
+
+        return flatten_results, fieldsets_results
 
     def get_slug_field(self):
         return self.site.slug_field or super().get_slug_field()
