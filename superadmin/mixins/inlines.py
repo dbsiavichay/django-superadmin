@@ -67,8 +67,7 @@ class InlinesMixin:
         return inlines
 
     def post(self, request, *args, **kwargs):
-        if self.action == "update":
-            self.object = self.get_object()
+        self.object = self.get_object() if self.action == "update" else None
         form = self.get_form()
         inlines = self.get_inlines()
         form.inlines = inlines
