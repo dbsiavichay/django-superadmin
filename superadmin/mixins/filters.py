@@ -77,7 +77,10 @@ class FilterMixin:
             if choices:
                 search = int(value) if type(value) == bool else value
                 if hasattr(choices, "model"):
-                    search_label = str(choices.get(pk=value))
+                    try:
+                        search_label = str(choices.get(pk=value))
+                    except choices.model.DoesNotExist:
+                        search_label = "[objeto eliminado]"
                 else:
                     try:
                         search = int(search)
