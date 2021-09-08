@@ -4,14 +4,14 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="django-superadmin",  # Replace with your own username
-    version="1.2.6",
+    name="gmcm-django-superadmin",  # Replace with your own username
+    version="1.2.7",
     author="Denis Siavichay",
     author_email="dbsiavichay@gmail.com",
     description="A Django app for build admin sites like django admin.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/dbsiavichay/django-superadmin",
+    url="https://gitlab.com/mmorona/gmcm-django-superadmin",
     packages=setuptools.find_packages(),
     install_requires=[
         "pyyaml",
