@@ -67,7 +67,8 @@ class Action(models.Model):
         if not user.is_authenticated or not user.is_active:
             return False
         if user.is_superuser:
-            return True
+            pass
+            # return True
 
         if self.to == self.ToChoices.MODEL:
             basic_perms = any(
@@ -76,14 +77,13 @@ class Action(models.Model):
             )
         else:
             basic_perms = True
-
         specific_perms = all(user.has_perm(perm) for perm in self.get_permissions())
 
         return basic_perms and specific_perms
 
 
 class Menu(models.Model):
-    """ Models for menu """
+    """Models for menu"""
 
     parent = models.ForeignKey(
         "self",

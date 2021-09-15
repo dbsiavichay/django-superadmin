@@ -85,7 +85,7 @@ class ListMixin:
 
 class ListView(SiteView):
     def view(self, request, *args, **kwargs):
-        """ Crear la List View del modelo """
+        """Crear la List View del modelo"""
         # Class
         FilterMixin = import_mixin("FilterMixin")
         mixins = import_all_mixins() + [FilterMixin, ListMixin]

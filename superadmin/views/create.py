@@ -69,7 +69,7 @@ class CreateMixin:
 
 class CreateView(SiteView):
     def view(self, request, *args, **kwargs):
-        """ Crear la List View del modelo """
+        """Crear la List View del modelo"""
         # Class
         mixins = import_all_mixins() + [CreateMixin]
         if self.site.inlines and isinstance(self.site.inlines, (list, tuple, dict)):

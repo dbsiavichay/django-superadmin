@@ -50,7 +50,7 @@ class UpdateMixin:
 
 class UpdateView(SiteView):
     def view(self, request, *args, **kwargs):
-        """ Crear la List View del modelo """
+        """Crear la List View del modelo"""
         # Class
         mixins = import_all_mixins() + [UpdateMixin]
         if self.site.inlines and isinstance(self.site.inlines, (list, tuple, dict)):

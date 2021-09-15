@@ -105,7 +105,7 @@ class DetailMixin:
 
 class DetailView(SiteView):
     def view(self, request, *args, **kwargs):
-        """ Crear la List View del modelo """
+        """Crear la List View del modelo"""
         # Class
         mixins = import_all_mixins() + [DetailMixin]
         View = get_base_view(BaseDetailView, mixins, self.site)
