@@ -69,6 +69,7 @@ class DetailMixin:
                 FieldService.get_field_label(self.object, field),
                 FieldService.get_field_value(self.object, field),
                 FieldService.get_field_type(self.object, field),
+                field,
             )
             for field in fields
         }
