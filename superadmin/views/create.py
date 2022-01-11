@@ -10,7 +10,7 @@ from ..utils import import_all_mixins, import_mixin
 
 
 class CreateMixin:
-    """Definimos la clase que utilizará el modelo"""
+    """Define model class"""
 
     # permission_required = permission_autosite + self.permission_extra
 
@@ -58,9 +58,14 @@ class CreateMixin:
                             if field.name != "id"
                         ],
                     )
+                    data.update(**self.get_extra_initial(object))
                     initial.update(data)
                     initial["related_initial"] = self.get_related_initial(object)
         return initial
+
+    @staticmethod
+    def get_extra_initial(instance):
+        return {}
 
     def get_success_url(self):
         urls = get_urls_of_site(self.site, object=self.object)
@@ -85,6 +90,9 @@ class CreateView(SiteView):
         View.form_class = self.site.form_class
         View.fields = self.site.fields
 
-        View.__bases__ = (*self.site.form_mixins, *View.__bases__)
+        if self.site.create_mixins:
+            View.__bases__ = (*self.site.create_mixins, *View.__bases__)
+        else:
+            View.__bases__ = (*self.site.form_mixins, *View.__bases__)
         view = View.as_view()
         return view(request, *args, **kwargs)

@@ -113,6 +113,5 @@ class DetailView(SiteView):
 
         # Set attributes
         View.__bases__ = (*self.site.detail_mixins, *View.__bases__)
-
         view = View.as_view()
         return view(request, *args, **kwargs)

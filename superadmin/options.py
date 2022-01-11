@@ -58,6 +58,8 @@ class ModelSite:
     # Mixins
     list_mixins = ()  # List of mixins that include in ListViews
     form_mixins = ()  # List of mixins that include in Create and Update Views
+    create_mixins = ()  # If create mixins is not None, include create_mixins and exclude form_mixins
+    update_mixins = ()  # If update mixins is not None, include update_mixins and exclude form_mixins
     detail_mixins = ()  # List of mixins that include in DetailViews
     delete_mixins = ()  # List of mixins that include in DetailViews
 

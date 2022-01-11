@@ -13,8 +13,9 @@ from ..services import FieldService
 
 
 class ListMixin:
-    """Definimos la clase que utilizará el modelo"""
+    """Define class"""
 
+    allow_empty = True
     action = "list"
 
     def get_context_data(self, **kwargs):
