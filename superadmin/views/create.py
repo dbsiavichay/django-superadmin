@@ -27,20 +27,21 @@ class CreateMixin:
         for related in object._meta.related_objects:
             related_name = related.related_name
             related_name = related_name if related_name else f"{related.name}_set"
-            related_objects = [
-                model_to_dict(
-                    obj,
-                    fields=[
-                        field.name
-                        for field in obj._meta.fields
-                        if field.name != "id"
-                        and field.name != related.remote_field.name
-                    ],
-                )
-                for obj in getattr(object, related_name).all()
-            ]
-            related_initial.update({related.related_model: related_objects})
-
+            related_objects = list()
+            if hasattr(object, related_name):
+                for obj in getattr(object, related_name).all():
+                    data = model_to_dict(
+                        obj,
+                        fields=[
+                            field.name
+                            for field in obj._meta.fields
+                            if field.name != "id"
+                            and field.name != related.remote_field.name
+                        ],
+                    )
+                    data.update(**self.get_extra_initial_related(obj, related_name))
+                    related_objects.append(data)
+                related_initial.update({related.related_model: related_objects})
         return related_initial
 
     def get_initial(self):
@@ -66,6 +67,11 @@ class CreateMixin:
     @staticmethod
     def get_extra_initial(instance):
         return {}
+
+    @staticmethod
+    def get_extra_initial_related(instance, key):
+        data = {}
+        return data.get(key, {})
 
     def get_success_url(self):
         urls = get_urls_of_site(self.site, object=self.object)
