@@ -1,9 +1,19 @@
 """ List view engine"""
+
+# Python
+import operator
+from functools import reduce
+
 # Django
+from django.core.paginator import InvalidPage
+from django.db.models import Q
+from django.http import Http404
+from django.utils.translation import gettext as _
 from django.views.generic import ListView as BaseListView
 
 
 # Local
+
 from .base import SiteView, get_base_view
 from ..shortcuts import get_urls_of_site
 from ..utils import import_mixin, import_all_mixins
@@ -17,6 +27,61 @@ class ListMixin:
 
     allow_empty = True
     action = "list"
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        search_params = self.request.GET
+        if search_params:
+            params = search_params.dict()
+            search = params.pop("search", None)
+            params.pop("page", None)
+            params.pop("paginate_by", None)
+            model_site = self.site
+            if (
+                search
+                and hasattr(model_site, "search_params")
+                and isinstance(model_site.search_params, (list, tuple))
+            ):
+                search = search.replace("+", ",").replace(";", ",")
+                search_split = search.split(",")
+                for search_split in search_split:
+                    filters = {
+                        key: search_split.strip() for key in model_site.search_params
+                    }
+                    params.update(**filters)
+                    args = [Q(**{key: value}) for key, value in filters.items()]
+                    queryset = queryset.filter(reduce(operator.__or__, args))
+        return queryset
+
+    def paginate_queryset(self, queryset, page_size):
+        """Paginate the queryset, if needed."""
+        paginator = self.get_paginator(
+            queryset,
+            page_size,
+            orphans=self.get_paginate_orphans(),
+            allow_empty_first_page=self.get_allow_empty(),
+        )
+        page_kwarg = self.page_kwarg
+        page = self.kwargs.get(page_kwarg) or self.request.GET.get(page_kwarg) or 1
+        try:
+            page_number = int(page)
+        except ValueError:
+            if page == "last":
+                page_number = paginator.num_pages
+            else:
+                raise Http404(
+                    _("Page is not “last”, nor can it be converted to an int.")
+                )
+        try:
+            if page_number > paginator.num_pages:
+                page_number = paginator.num_pages
+            page = paginator.page(page_number)
+            return paginator, page, page.object_list, page.has_other_pages()
+        except InvalidPage as e:
+            raise Http404(
+                _("Invalid page (%(page_number)s): %(message)s")
+                % {"page_number": page_number, "message": str(e)}
+            )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
