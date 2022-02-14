@@ -56,5 +56,4 @@ def get_user_menu(menu_list, user):
             continue
 
         menus.append(obj_menu)
-
     return menus
