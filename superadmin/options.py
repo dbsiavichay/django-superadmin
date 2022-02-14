@@ -75,7 +75,7 @@ class ModelSite:
     search_fields = ()  # Used for create search method by specified fields
     filter_fields = ()
     order_by = ()  # Used for crate ordering methods by specified fields
-    search_params = [] # Used for define search params in list view
+    search_params = []  # Used for define search params in list view
     # Urls
     url_list_suffix = "list"
     url_create_suffix = "create"

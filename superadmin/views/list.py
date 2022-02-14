@@ -41,12 +41,13 @@ class ListMixin:
                 search
                 and hasattr(model_site, "search_params")
                 and isinstance(model_site.search_params, (list, tuple))
+                and model_site.search_params
             ):
                 search = search.replace("+", ",").replace(";", ",")
                 search_split = search.split(",")
-                for search_split in search_split:
+                for search_value in search_split:
                     filters = {
-                        key: search_split.strip() for key in model_site.search_params
+                        key: search_value.strip() for key in model_site.search_params
                     }
                     params.update(**filters)
                     args = [Q(**{key: value}) for key, value in filters.items()]
