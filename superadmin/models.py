@@ -129,7 +129,7 @@ class Menu(models.Model):
                 url_name = model_site.get_url_name("list")
         else:
             # url_name = f"site:{slugify(self.name)}"
-            url_name = f"/{self.get_route()}"
+            url_name = f"/{self.route}"
             reverse_url = False
         try:
             if reverse_url:
