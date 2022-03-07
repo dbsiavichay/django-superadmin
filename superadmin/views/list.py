@@ -87,7 +87,6 @@ class ListMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(self.site.list_extra_context)
-
         opts = {
             "fields": self.get_list_fields(),
             "rows": self.get_rows(context["object_list"]),
@@ -101,7 +100,12 @@ class ListMixin:
             if context["is_paginated"]
             else context["object_list"].count(),
         }
-
+        if (
+            hasattr(self.site, "search_params")
+            and isinstance(self.site.search_params, (list, tuple))
+            and self.site.search_params
+        ):
+            opts.update({"search_params": self.site.search_params})
         if "site" in context:
             context["site"].update(opts)
         else:

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gmcm-django-superadmin",
-    version="2.0.9",
+    version="2.0.10",
     author="Denis Siavichay",
     author_email="dbsiavichay@gmail.com",
     description="A Django app for build admin sites like django admin.",
