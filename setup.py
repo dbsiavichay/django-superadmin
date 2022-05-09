@@ -5,13 +5,13 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gmcm-django-superadmin",
-    version="2.0.10",
+    version="1.2.5",
     author="Denis Siavichay",
     author_email="dbsiavichay@gmail.com",
     description="A Django app for build admin sites like django admin.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://gitlab.com/mmorona/gmcm-django-superadmin",
+    url="https://github.com/dbsiavichay/django-superadmin",
     packages=setuptools.find_packages(),
     install_requires=[
         "pyyaml",
