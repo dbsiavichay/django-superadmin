@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="gmcm-django-superadmin",
+    name="django-superadmin",
     version="1.2.5",
     author="Denis Siavichay",
     author_email="dbsiavichay@gmail.com",
