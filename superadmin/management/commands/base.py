@@ -105,6 +105,7 @@ def build_menu(data):
 
     def permissions(data, action):
         content_type = ContentType.objects.get_for_model(Permission)
+        action.permissions.clear()
         for perm in data:
             obj, created = Permission.objects.update_or_create(
                 codename=perm.get("codename"),

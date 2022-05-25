@@ -10,7 +10,7 @@ from ..utils import import_all_mixins, import_mixin
 
 
 class CreateMixin:
-    """Definimos la clase que utilizará el modelo"""
+    """Define model class"""
 
     # permission_required = permission_autosite + self.permission_extra
 
@@ -27,20 +27,21 @@ class CreateMixin:
         for related in object._meta.related_objects:
             related_name = related.related_name
             related_name = related_name if related_name else f"{related.name}_set"
-            related_objects = [
-                model_to_dict(
-                    obj,
-                    fields=[
-                        field.name
-                        for field in obj._meta.fields
-                        if field.name != "id"
-                        and field.name != related.remote_field.name
-                    ],
-                )
-                for obj in getattr(object, related_name).all()
-            ]
-            related_initial.update({related.related_model: related_objects})
-
+            related_objects = list()
+            if hasattr(object, related_name):
+                for obj in getattr(object, related_name).all():
+                    data = model_to_dict(
+                        obj,
+                        fields=[
+                            field.name
+                            for field in obj._meta.fields
+                            if field.name != "id"
+                            and field.name != related.remote_field.name
+                        ],
+                    )
+                    data.update(**self.get_extra_initial_related(obj, related_name))
+                    related_objects.append(data)
+                related_initial.update({related.related_model: related_objects})
         return related_initial
 
     def get_initial(self):
@@ -58,9 +59,19 @@ class CreateMixin:
                             if field.name != "id"
                         ],
                     )
+                    data.update(**self.get_extra_initial(object))
                     initial.update(data)
                     initial["related_initial"] = self.get_related_initial(object)
         return initial
+
+    @staticmethod
+    def get_extra_initial(instance):
+        return {}
+
+    @staticmethod
+    def get_extra_initial_related(instance, key):
+        data = {}
+        return data.get(key, {})
 
     def get_success_url(self):
         urls = get_urls_of_site(self.site, object=self.object)
@@ -69,7 +80,7 @@ class CreateMixin:
 
 class CreateView(SiteView):
     def view(self, request, *args, **kwargs):
-        """ Crear la List View del modelo """
+        """Crear la List View del modelo"""
         # Class
         mixins = import_all_mixins() + [CreateMixin]
         if self.site.inlines and isinstance(self.site.inlines, (list, tuple, dict)):
@@ -85,6 +96,9 @@ class CreateView(SiteView):
         View.form_class = self.site.form_class
         View.fields = self.site.fields
 
-        View.__bases__ = (*self.site.form_mixins, *View.__bases__)
+        if self.site.create_mixins:
+            View.__bases__ = (*self.site.create_mixins, *View.__bases__)
+        else:
+            View.__bases__ = (*self.site.form_mixins, *View.__bases__)
         view = View.as_view()
         return view(request, *args, **kwargs)

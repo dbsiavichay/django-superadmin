@@ -50,16 +50,18 @@ class ModelSite:
     inlines = {}
 
     # Templates
-    list_template_name = None  # Says superadmin which list template use
-    form_template_name = None  # Says superadmin which form template use
-    detail_template_name = None  # Says superadmin which detail template use
-    delete_template_name = None  # Says superadmin which delete template use
+    list_template_name = None  # Says which list template use
+    form_template_name = None  # Says which form template use
+    detail_template_name = None  # Says which detail template use
+    delete_template_name = None  # Says which delete template use
 
     # Mixins
-    list_mixins = ()  # List of mixins that superadmin include in ListViews
-    form_mixins = ()  # List of mixins that superadmin include in Create and Update Views
-    detail_mixins = ()  # List of mixins that superadmin include in DetailViews
-    delete_mixins = ()  # List of mixins that superadmin include in DetailViews
+    list_mixins = ()  # List of mixins that include in ListViews
+    form_mixins = ()  # List of mixins that include in Create and Update Views
+    create_mixins = ()  # If create mixins is not None, include create_mixins and exclude form_mixins
+    update_mixins = ()  # If update mixins is not None, include update_mixins and exclude form_mixins
+    detail_mixins = ()  # List of mixins that include in DetailViews
+    delete_mixins = ()  # List of mixins that include in DetailViews
 
     # Prepopulate
     slug_field = "slug"
@@ -69,11 +71,11 @@ class ModelSite:
     queryset = None  # Specified custom queryset
     paginate_by = None  # Specified if ListView paginated by
 
-    # Filter and ordering
-    search_fields = ()  # Used for create searchs method by specified fields
+    # Filter, ordering and search
+    search_fields = ()  # Used for create search method by specified fields
     filter_fields = ()
-    order_by = ()  # User for crate ordering methods by specified fields
-
+    order_by = ()  # Used for crate ordering methods by specified fields
+    search_params = []  # Used for define search params in list view
     # Urls
     url_list_suffix = "list"
     url_create_suffix = "create"
@@ -185,10 +187,14 @@ class ModelSite:
             ]
 
         if "detail" in self.allow_views:
+            url_detail_suffix = self.url_detail_suffix
+            url_detail = f"{route_param}/"
+            if url_detail_suffix:
+                url_detail = f"{url_detail}/{self.url_detail_suffix}/"
             url_detail_name = self.get_base_url_name("detail")
             urlpatterns += [
                 path(
-                    route=f"{route_param}/{self.url_detail_suffix}/",
+                    route=url_detail,
                     view=DetailView.as_view(site=self),
                     name=url_detail_name,
                 ),
@@ -233,5 +239,5 @@ class ModelSite:
 
     @property
     def urls(self):
-        """Retorna las urls creadas"""
+        """Return created urls"""
         return self.get_urls()

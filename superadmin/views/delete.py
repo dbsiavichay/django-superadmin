@@ -25,7 +25,7 @@ class DeleteMixin:
 
 class DeleteView(SiteView):
     def view(self, request, *args, **kwargs):
-        """ Crear la List View del modelo """
+        """Crear la List View del modelo"""
         # Class
         mixins = import_all_mixins() + [DeleteMixin]
         View = get_base_view(BaseDeleteView, mixins, self.site)

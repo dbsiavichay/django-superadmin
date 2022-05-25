@@ -18,7 +18,13 @@ class FilterView(View):
         model = apps.get_model(self.app_name, self.model_name)
         lookups = self.get_lookups(model, self.field)
         choices = self.get_choices(model, self.field)
-        return JsonResponse({"lookups": lookups, "choices": choices})
+        return JsonResponse(
+            {
+                "lookups": lookups,
+                "choices": choices,
+                "type": FieldService.get_field_type(model, self.field),
+            }
+        )
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
@@ -55,11 +61,21 @@ class SessionView(View):
         self.model_name = kwargs.get("model")
 
     def save_params(self):
-        params = {
-            key: value
-            for key, value in self.request.POST.items()
-            if key != "csrfmiddlewaretoken"
-        }
+        model = apps.get_model(self.app_name, self.model_name)
+        params = {}
+        for key, value in self.request.POST.items():
+            if key != "csrfmiddlewaretoken":
+                clean_key = key.split("__")
+                if clean_key:
+                    clean_key = clean_key[0]
+                    field = FieldService.get_field_type(model, clean_key)
+                    if field == "DateField":
+                        datetime_object = datetime.strptime(value, "%d/%m/%Y").strftime(
+                            "%Y-%m-%d"
+                        )
+                        params.update({key: datetime_object})
+                    else:
+                        params.update({key: value})
         filters = self.request.session.get("filters", [])
         now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         for elem in filters:

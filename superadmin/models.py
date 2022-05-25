@@ -67,7 +67,8 @@ class Action(models.Model):
         if not user.is_authenticated or not user.is_active:
             return False
         if user.is_superuser:
-            return True
+            pass
+            # return True
 
         if self.to == self.ToChoices.MODEL:
             basic_perms = any(
@@ -76,14 +77,13 @@ class Action(models.Model):
             )
         else:
             basic_perms = True
-
         specific_perms = all(user.has_perm(perm) for perm in self.get_permissions())
 
         return basic_perms and specific_perms
 
 
 class Menu(models.Model):
-    """ Models for menu """
+    """Models for menu"""
 
     parent = models.ForeignKey(
         "self",
@@ -121,17 +121,21 @@ class Menu(models.Model):
 
     def get_url(self):
         url_name = None
+        reverse_url = True
         if self.action.to == Action.ToChoices.MODEL:
             model_class = self.action.model
             if model_class and site.is_registered(model_class):
                 model_site = site.get_modelsite(model_class)
                 url_name = model_site.get_url_name("list")
         else:
-            url_name = f"site:{slugify(self.name)}"
+            # url_name = f"site:{slugify(self.name)}"
+            url_name = f"/{self.route}"
+            reverse_url = False
         try:
-            url = reverse(url_name)
-            return url
+            if reverse_url:
+                url_name = reverse(url_name)
+            return url_name
         except NoReverseMatch:
-            if settings.DEBUG:
+            if settings.DEBUG and url_name:
                 print("DEBUG: Not found url for %s" % url_name)
         return "/page/not-found/"

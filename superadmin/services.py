@@ -152,7 +152,7 @@ class FilterService:
         "icontains__exclude": "No contiene",
         "contains__exclude": "No contiene",
         "gte": "Mayor o igual que",
-        "lte": "Meno o igual que",
+        "lte": "Menor o igual que",
     }
 
     EXCLUDE = "__exclude"

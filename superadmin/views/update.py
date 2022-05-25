@@ -50,7 +50,7 @@ class UpdateMixin:
 
 class UpdateView(SiteView):
     def view(self, request, *args, **kwargs):
-        """ Crear la List View del modelo """
+        """Crear la List View del modelo"""
         # Class
         mixins = import_all_mixins() + [UpdateMixin]
         if self.site.inlines and isinstance(self.site.inlines, (list, tuple, dict)):
@@ -66,9 +66,10 @@ class UpdateView(SiteView):
         # Set attribures
         View.form_class = self.site.form_class
         View.fields = self.site.fields
-
-        View.__bases__ = (*self.site.form_mixins, *View.__bases__)
-
+        if self.site.update_mixins:
+            View.__bases__ = (*self.site.update_mixins, *View.__bases__)
+        else:
+            View.__bases__ = (*self.site.form_mixins, *View.__bases__)
         view = View.as_view()
         return view(request, *args, **kwargs)
 

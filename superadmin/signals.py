@@ -18,7 +18,7 @@ from . import site
 """ Signal for presave instance """
 
 
-@receiver(pre_save)
+@receiver(post_save)
 def prepopulate_slug(sender, instance, **kwargs):
     if not site.is_registered(sender):
         return
@@ -44,8 +44,10 @@ def prepopulate_slug(sender, instance, **kwargs):
             )
 
     fields = (FieldService.get_field_value(instance, field) for field in slug_fields)
-    slug = " ".join(fields)
-    instance.slug = slugify(slug)
+    slug = slugify(" ".join(fields))
+    if instance.slug != slug:
+        instance.slug = slug
+        instance.save()
 
 
 @receiver(pre_save, sender=Menu)

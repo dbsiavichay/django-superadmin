@@ -69,6 +69,7 @@ class DetailMixin:
                 FieldService.get_field_label(self.object, field),
                 FieldService.get_field_value(self.object, field),
                 FieldService.get_field_type(self.object, field),
+                field,
             )
             for field in fields
         }
@@ -105,13 +106,12 @@ class DetailMixin:
 
 class DetailView(SiteView):
     def view(self, request, *args, **kwargs):
-        """ Crear la List View del modelo """
+        """Crear la List View del modelo"""
         # Class
         mixins = import_all_mixins() + [DetailMixin]
         View = get_base_view(BaseDetailView, mixins, self.site)
 
         # Set attributes
         View.__bases__ = (*self.site.detail_mixins, *View.__bases__)
-
         view = View.as_view()
         return view(request, *args, **kwargs)
